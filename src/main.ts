@@ -255,6 +255,12 @@ async function main() {
   const barLabel = new Text({ text: '7D COMPLETION', style: { fontFamily: 'monospace', fontSize: 7, fill: C.textDim } });
   barLabel.position.set(6, 200); rightPanel.addChild(barLabel);
   const barG = new Graphics(); barG.position.set(6, 209); rightPanel.addChild(barG);
+  // Token budget bar
+  const budgetLabel = new Text({ text: 'TOKEN BUDGET', style: { fontFamily: 'monospace', fontSize: 7, fill: C.textDim } });
+  budgetLabel.position.set(6, 225); rightPanel.addChild(budgetLabel);
+  const budgetG = new Graphics(); budgetG.position.set(6, 234); rightPanel.addChild(budgetG);
+  const budgetTxt = new Text({ text: '0 / 10000', style: { fontFamily: 'monospace', fontSize: 7, fill: C.text } });
+  budgetTxt.position.set(120, 234); rightPanel.addChild(budgetTxt);
   const traceDiv = new Graphics(); traceDiv.moveTo(4, 255).lineTo(RIGHT_W-4, 255).stroke({ color: C.border, width: 1 }); rightPanel.addChild(traceDiv);
   const traceTitle = new Text({ text: '▌ TRACE', style: { fontFamily: 'monospace', fontSize: 10, fill: C.text, fontWeight: 'bold' } });
   traceTitle.position.set(6, 263); rightPanel.addChild(traceTitle);
@@ -461,6 +467,17 @@ async function main() {
       barG.rect(10 + i * barW + 2, bh - 4 - h, barW - 4, h).fill({ color: 0x00ff66, alpha: 0.7 });
       barG.rect(10 + i * barW + 2, bh - 4 - h, barW - 4, 2).fill({ color: 0x00ff66 });
     });
+
+    // Token budget bar
+    budgetG.clear();
+    const totalTok = EMPLOYEES.reduce((s, e) => s + e.tokens, 0);
+    const budget = 10000;
+    const budPct = Math.min(1, totalTok / budget);
+    const budgetColor = budPct > 0.9 ? 0xff3366 : budPct > 0.7 ? 0xffcc00 : 0x00ff88;
+    budgetG.rect(0, 0, RIGHT_W - 16, 6).fill({ color: 0x0a0a14 });
+    budgetG.rect(0, 0, (RIGHT_W - 16) * budPct, 6).fill({ color: budgetColor });
+    budgetTxt.text = `${totalTok} / ${budget}`;
+    budgetTxt.style.fill = budgetColor;
 
     const totalTasks = 12;
     const doneTasks = taskHistory.length;
@@ -902,16 +919,23 @@ async function main() {
       }
     });
 
-    // ===== GROUP CHAT: state-aware smart bubbles =====
+    // ===== GROUP CHAT: state + task-type aware =====
     const CHAT_BY_STATE: Record<string, string[]> = {
-      writing: ['这个函数快写完了', '正在调接口', 'UI组件写好了', '查下文档'],
-      thinking: ['这个逻辑有点绕', '让我想想方案', '需求又变了', '先捋一下思路'],
-      calling_tool: ['我去调个API', '等我查个资料', '调个工具试试', '去趟茶水间'],
-      error: ['报错了，帮我看看', '这个bug真坑', '又挂了...', '谁来帮我debug'],
-      success: ['搞定了！', '测试通过了', '提交了PR', '收工！'],
+      writing: ['这个函数快写完了', '正在调接口', 'UI组件写好了', '查下文档', '前端样式调完了', '后端接口联调中'],
+      thinking: ['这个逻辑有点绕', '让我想想方案', '需求又变了', '先捋一下思路', '架构图画好了'],
+      calling_tool: ['我去调个API', '等我查个资料', '调个工具试试', '去趟茶水间', '数据库查询一下'],
+      error: ['报错了，帮我看看', '这个bug真坑', '又挂了...', '谁来帮我debug', '接口500了'],
+      success: ['搞定了！', '测试通过了', '提交了PR', '收工！', '上线了'],
       idle: ['等等任务', '摸鱼中', '喝杯咖啡', '今天好闲'],
       dead_loop: ['又转起来了...', '死循环了', '停不下来了']
     };
+    function detectTaskType(task: string): string {
+      if (/ui|css|组件|样式|页面|前端|login|page/i.test(task)) return 'frontend';
+      if (/api|db|接口|后端|database|deploy|backend/i.test(task)) return 'backend';
+      if (/test|测试|bug|用例|coverage/i.test(task)) return 'test';
+      if (/prd|需求|排期|product|review/i.test(task)) return 'product';
+      return 'general';
+    }
     for (let i = 0; i < sprites.length; i++) {
       for (let j = i+1; j < sprites.length; j++) {
         const dx = sprites[i].x - sprites[j].x, dy = sprites[i].y - sprites[j].y;
@@ -968,6 +992,14 @@ async function main() {
         }
       }
     });
+
+    // Alert: flash dead_loop and error agents
+    const alertFlash = Math.floor(Date.now() / 500) % 2 === 0;
+    for (let i = 0; i < sprites.length; i++) {
+      if (EMPLOYEES[i].state === 'dead_loop' || EMPLOYEES[i].state === 'error') {
+        sprites[i].alpha = alertFlash ? 1 : 0.5;
+      }
+    }
 
     for (let i = 0; i < EMPLOYEES.length; i++) {
       const emp = EMPLOYEES[i];
