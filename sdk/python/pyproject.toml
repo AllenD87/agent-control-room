@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "agent-control-room"
+version = "0.1.0"
+description = "Agent Control Room Python SDK"
+requires-python = ">=3.8"
+dependencies = ["websocket-client>=1.0.0"]
+
+[project.scripts]
+acr-py = "agent_control_room:main"

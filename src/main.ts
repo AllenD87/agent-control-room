@@ -266,6 +266,34 @@ async function main() {
   const histText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00ff88, wordWrap: true, wordWrapWidth: RIGHT_W-12, lineHeight: 12 } });
   histText.position.set(6, 358); rightPanel.addChild(histText);
 
+  // ===== HISTORY REPLAY =====
+  const replayDiv = new Graphics(); replayDiv.moveTo(4, 440).lineTo(RIGHT_W-4, 440).stroke({ color: 0xff00ff, width: 1 }); rightPanel.addChild(replayDiv);
+  const replayTitle = new Text({ text: '▌ REPLAY', style: { fontFamily: 'monospace', fontSize: 10, fill: 0xff00ff, fontWeight: 'bold' } });
+  replayTitle.position.set(6, 448); rightPanel.addChild(replayTitle);
+  // Play/pause button + speed
+  const playBtn = new Text({ text: '▶ PLAY', style: { fontFamily: 'monospace', fontSize: 9, fill: 0x00ff88, fontWeight: 'bold' } });
+  playBtn.position.set(6, 468); rightPanel.addChild(playBtn);
+  const speedTxt = new Text({ text: '1x', style: { fontFamily: 'monospace', fontSize: 9, fill: 0x00ffff } });
+  speedTxt.position.set(60, 468); rightPanel.addChild(speedTxt);
+  // Timeline bar
+  const timelineBg = new Graphics(); timelineBg.rect(6, 488, RIGHT_W-16, 6).fill({ color: 0x1a1a33 }); rightPanel.addChild(timelineBg);
+  const timelineFill = new Graphics(); timelineFill.rect(6, 488, 0, 6).fill({ color: 0xff00ff }); rightPanel.addChild(timelineFill);
+  const timelineLabel = new Text({ text: '00:00', style: { fontFamily: 'monospace', fontSize: 8, fill: C.text } });
+  timelineLabel.position.set(6, 498); rightPanel.addChild(timelineLabel);
+  // Click on timeline to seek
+  const replayState = { playing: false, speed: 1, index: 0, data: [] as any[] };
+  playBtn.eventMode = 'static'; playBtn.cursor = 'pointer';
+  playBtn.on('pointertap', () => {
+    replayState.playing = !replayState.playing;
+    playBtn.text = replayState.playing ? '⏸ PAUSE' : '▶ PLAY';
+    playBtn.style.fill = replayState.playing ? 0xffcc00 : 0x00ff88;
+  });
+  speedTxt.eventMode = 'static'; speedTxt.cursor = 'pointer';
+  speedTxt.on('pointertap', () => {
+    replayState.speed = replayState.speed === 1 ? 2 : replayState.speed === 2 ? 4 : 1;
+    speedTxt.text = `${replayState.speed}x`;
+  });
+
   // ===== BOTTOM TERMINAL =====
   const bottomBar = new Container(); bottomBar.position.set(0, H-BOT_H); app.stage.addChild(bottomBar);
   const bbBg = new Graphics(); sciPanel(bbBg, 0, 0, W, BOT_H, C.text); bottomBar.addChild(bbBg);
@@ -592,12 +620,21 @@ async function main() {
             });
           }
           if (msg.adapters) {
-            // Update adapter status display
             (window as any).__adapters = msg.adapters;
           }
         }
+        if (msg.type === 'history') {
+          replayState.data = msg.history || [];
+          console.log(`[WS] Received ${replayState.data.length} history snapshots`);
+        }
       } catch (e) { /* ignore */ }
     };
+    // Request history after connection
+    setTimeout(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'get_history' }));
+      }
+    }, 1000);
   } catch (e) {
     console.log('[WS] Connection failed, using local simulation');
   }
@@ -605,6 +642,30 @@ async function main() {
   // ===== ANIMATION =====
   app.ticker.add((ticker) => {
     const dt = ticker.deltaTime / 60;
+
+    // Replay logic
+    if (replayState.playing && replayState.data.length > 0) {
+      replayState.index += replayState.speed * 0.5;
+      if (replayState.index >= replayState.data.length) replayState.index = 0;
+      const snap = replayState.data[Math.floor(replayState.index)];
+      if (snap && snap.agents) {
+        snap.agents.forEach((a: any, i: number) => {
+          if (i < EMPLOYEES.length) {
+            EMPLOYEES[i].state = a.state as AgentState;
+            EMPLOYEES[i].task = a.task;
+            EMPLOYEES[i].progress = a.progress;
+            EMPLOYEES[i].tokens = a.tokens;
+          }
+        });
+      }
+      // Update timeline
+      const pct = replayState.data.length > 0 ? replayState.index / replayState.data.length : 0;
+      timelineFill.clear();
+      timelineFill.rect(6, 488, (RIGHT_W-16) * pct, 6).fill({ color: 0xff00ff });
+      const elapsed = Math.floor(replayState.index * 5); // 5s per snapshot
+      timelineLabel.text = `${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+    }
+
     for (let i = 0; i < EMPLOYEES.length; i++) {
       const emp = EMPLOYEES[i];
       const spr = sprites[i];

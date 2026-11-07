@@ -1,0 +1,7 @@
+{
+  "name": "acr-cli",
+  "version": "1.0.0",
+  "description": "Agent Control Room CLI",
+  "bin": { "acr": "./index.js" },
+  "dependencies": { "ws": "^8.16.0" }
+}

@@ -12,6 +12,8 @@ const PORT = parseInt(process.env.PORT || '5175');
 
 // ===== Agent Registry =====
 const agents = new Map(); // agentId -> { id, name, role, state, task, progress, tokens, seat, lastSeen, trace[] }
+const history = []; // [{ ts, agents: [...] }] state snapshots, keep last hour
+const MAX_HISTORY = 720; // 720 * 5s = 1 hour
 const seats = [
   { x: 2, y: 13 }, { x: 6, y: 13 }, { x: 10, y: 13 }, { x: 14, y: 13 },
   { x: 2, y: 18 }, { x: 6, y: 18 }, { x: 10, y: 18 }, { x: 14, y: 18 },
@@ -55,6 +57,9 @@ function broadcastState() {
     task: a.task, progress: a.progress, tokens: a.tokens,
     seat: a.seat, trace: a.trace.slice(-10),
   }));
+  // Record history
+  history.push({ ts: Date.now(), agents: list });
+  if (history.length > MAX_HISTORY) history.shift();
   broadcast('state', { agents: list, adapters, totalTokens: list.reduce((s, a) => s + a.tokens, 0) });
 }
 
@@ -139,6 +144,10 @@ wss.on('connection', (ws, req) => {
           broadcast('deregistered', { id: msg.id });
           broadcastState();
         }
+        break;
+      }
+      case 'get_history': {
+        ws.send(JSON.stringify({ type: 'history', history }));
         break;
       }
     }
