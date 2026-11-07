@@ -12,10 +12,15 @@
 
 - 🗺️ **Spatial Avatar Visualization** — Each agent has its own workstation, not just a boring list
 - 🎭 **7 Live States with Animations** — Writing, thinking, calling tools, error, dead loop, success — each with its own emoji animation
+- 💬 **State-Aware Group Chat** — Agents chat naturally when near each other, content adapts to current state (writing→"函数快写完了", error→"帮我看看bug", success→"搞定了！")
+- 🏛️ **Meeting Room Scenes** — 3+ agents in the meeting room show "💬 会议中" status
+- 🔗 **Dynamic Task Dependencies** — Purple dependency lines auto-trigger: when Agent A finishes, Agent B starts automatically. Completed lines turn gray.
 - 🔌 **Hot-plug Agents** — New agents appear on the map automatically when they start, disappear when they stop. No restart needed
 - 📡 **WebSocket Real-time Push** — State changes sync in milliseconds
 - 🎨 **Cyberpunk Control Room Style** — Neon glow + dark background, maximum tech vibe
-- 📊 **Full-stack Monitoring** — Token usage, task progress, trace paths, event logs — all on one screen
+- 📊 **Full-stack Monitoring** — Token usage, task progress, trace paths, event logs, time replay — all on one screen
+- 📱 **Responsive + Mobile Drawer** — F11 big screen mode, mobile slide-out drawer panels
+- ⚙️ **YAML Config Hot Reload** — Adapter config changes take effect without restart
 
 ---
 

@@ -59,7 +59,7 @@ const STATE_BUBBLE: Record<string, { bg: number; fg: number; border: number }> =
   error: { bg: 0x330a0a, fg: 0xff6666, border: 0xff3333 }, dead_loop: { bg: 0x332a0a, fg: 0xffcc44, border: 0xffaa22 },
   success: { bg: 0x0a2a1a, fg: 0x66ffaa, border: 0x33dd88 },
 };
-const C = { bg: 0x0a0a14, panelBg: 0x111122, panelBg2: 0x1a1a33, border: 0xff00ff, text: 0x00ffff, textDim: 0x7777aa, accent: 0xff00ff };
+const C = { bg: 0x0a0a14, panelBg: 0x111122, panelBg2: 0x1a1a33, border: 0xff00ff, text: 0x80f0ff, textDim: 0x9999cc, accent: 0xff00ff };
 
 function makeBubble(text: string, state: string): Container {
   const c = new Container();
@@ -73,7 +73,7 @@ function makeBubble(text: string, state: string): Container {
   const w = iconTxt.width + gap + labelTxt.width + pad*2;
   const h = Math.max(iconTxt.height, labelTxt.height) + pad*2;
   const g = new Graphics();
-  g.roundRect(-w/2, -(h+3), w, h, 3).fill({ color: colors.bg, alpha: 0.9 }).stroke({ color: colors.border, width: 1 });
+  g.roundRect(-w/2, -(h+3), w, h, 3).fill({ color: colors.bg, alpha: 0.9 }).stroke({ color: colors.border, width: 1.5 });
   g.moveTo(-2, -3).lineTo(2, -3).lineTo(0, 0).closePath().fill({ color: colors.bg, alpha: 0.9 });
   // Icon left, centered vertically
   iconTxt.position.set(-w/2+pad, -(h+3)+pad);
@@ -103,8 +103,8 @@ async function loadTexture(url: string): Promise<Texture> {
 
 function sciPanel(g: Graphics, x: number, y: number, w: number, h: number, bc: number = C.border) {
   g.rect(x, y, w, h).fill({ color: C.panelBg, alpha: 0.95 });
-  g.rect(x, y, w, h).stroke({ color: bc, alpha: 0.4, width: 1 });
-  g.moveTo(x, y).lineTo(x+w, y).stroke({ color: C.text, alpha: 0.3, width: 1 });
+  g.rect(x, y, w, h).stroke({ color: bc, alpha: 0.7, width: 1.5 });
+  g.moveTo(x, y).lineTo(x+w, y).stroke({ color: C.text, alpha: 0.4, width: 1 });
 }
 
 const eventLog: { time: string; text: string; color: number }[] = [];
@@ -141,8 +141,8 @@ async function main() {
   });
   const statsText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 11, fill: C.text, fontWeight: 'bold' } });
   statsText.position.set(630, 18); topBar.addChild(statsText);
-  const hintTxt = new Text({ text: 'G=grid  D=detail', style: { fontFamily: 'monospace', fontSize: 9, fill: C.textDim, alpha: 0.6 } });
-  hintTxt.position.set(W-150, 18); topBar.addChild(hintTxt);
+  const hintTxt = new Text({ text: 'G=grid  D=detail  F11=big', style: { fontFamily: 'monospace', fontSize: 9, fill: C.textDim, alpha: 0.6 } });
+  hintTxt.position.set(W-180, 18); topBar.addChild(hintTxt);
 
   // ===== LEFT SIDEBAR =====
   const sidebar = new Container(); sidebar.position.set(0, TOP_H); app.stage.addChild(sidebar);
@@ -202,9 +202,9 @@ async function main() {
     name.anchor.set(0.5, 0); name.position.set(px, py+2); name.zIndex = 10000;
     world.addChild(name); names.push(name);
 
-    const item = new Container(); item.position.set(4, 32 + i*38);
-    const itemBg = new Graphics(); itemBg.rect(0, 0, LEFT_W-8, 34).fill({ color: C.panelBg2, alpha: 0.8 });
-    itemBg.rect(0, 0, LEFT_W-8, 34).stroke({ color: STATE_COLOR[emp.state], alpha: 0.4, width: 1 });
+    const item = new Container(); item.position.set(4, 32 + i*42);
+    const itemBg = new Graphics(); itemBg.rect(0, 0, LEFT_W-8, 38).fill({ color: C.panelBg2, alpha: 0.8 });
+    itemBg.rect(0, 0, LEFT_W-8, 38).stroke({ color: STATE_COLOR[emp.state], alpha: 0.4, width: 1 });
     item.addChild(itemBg);
     const dot = new Graphics(); dot.circle(7, 8, 2.5).fill({ color: STATE_COLOR[emp.state] }); item.addChild(dot);
     const pTag = new Text({ text: emp.priority, style: { fontFamily: 'monospace', fontSize: 7, fill: emp.priority==='H'?0xff3366:emp.priority==='M'?0xffcc00:0x888888 } });
@@ -260,28 +260,55 @@ async function main() {
   traceTitle.position.set(6, 263); rightPanel.addChild(traceTitle);
   const traceInfo = new Text({ text: '[ dbl-click agent ]', style: { fontFamily: 'monospace', fontSize: 8, fill: C.textDim, wordWrap: true, wordWrapWidth: RIGHT_W-12, lineHeight: 12 } });
   traceInfo.position.set(6, 283); rightPanel.addChild(traceInfo);
-  const histDiv = new Graphics(); histDiv.moveTo(4, 330).lineTo(RIGHT_W-4, 330).stroke({ color: C.border, width: 1 }); rightPanel.addChild(histDiv);
-  const histTitle = new Text({ text: '▌ HISTORY', style: { fontFamily: 'monospace', fontSize: 10, fill: 0xffcc00, fontWeight: 'bold' } });
-  histTitle.position.set(6, 338); rightPanel.addChild(histTitle);
-  const histText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00ff88, wordWrap: true, wordWrapWidth: RIGHT_W-12, lineHeight: 12 } });
-  histText.position.set(6, 358); rightPanel.addChild(histText);
+  const histDiv = new Graphics(); histDiv.moveTo(4, 320).lineTo(RIGHT_W-4, 320).stroke({ color: 0xffcc00, width: 2 }); rightPanel.addChild(histDiv);
+  const histTitle = new Text({ text: '▌ TASK HISTORY', style: { fontFamily: 'monospace', fontSize: 10, fill: 0xffcc00, fontWeight: 'bold' } });
+  histTitle.position.set(6, 326); rightPanel.addChild(histTitle);
+  const histText = new Text({ text: '✓ No completed tasks yet', style: { fontFamily: 'monospace', fontSize: 7, fill: 0x00ff88, wordWrap: true, wordWrapWidth: RIGHT_W-12, lineHeight: 10 } });
+  histText.position.set(6, 342); rightPanel.addChild(histText);
 
-  // ===== HISTORY REPLAY =====
-  const replayDiv = new Graphics(); replayDiv.moveTo(4, 440).lineTo(RIGHT_W-4, 440).stroke({ color: 0xff00ff, width: 1 }); rightPanel.addChild(replayDiv);
-  const replayTitle = new Text({ text: '▌ REPLAY', style: { fontFamily: 'monospace', fontSize: 10, fill: 0xff00ff, fontWeight: 'bold' } });
-  replayTitle.position.set(6, 448); rightPanel.addChild(replayTitle);
+  // ===== TIME REPLAY (fixed bottom) =====
+  const replayDiv = new Graphics(); replayDiv.moveTo(4, 400).lineTo(RIGHT_W-4, 400).stroke({ color: 0xff00ff, width: 3 }); rightPanel.addChild(replayDiv);
+  const replayTitle = new Text({ text: '▌ TIME REPLAY', style: { fontFamily: 'monospace', fontSize: 10, fill: 0xff00ff, fontWeight: 'bold' } });
+  replayTitle.position.set(6, 408); rightPanel.addChild(replayTitle);
+  const replayHint = new Text({ text: '← drag →', style: { fontFamily: 'monospace', fontSize: 7, fill: C.textDim } });
+  replayHint.position.set(90, 410); rightPanel.addChild(replayHint);
   // Play/pause button + speed
   const playBtn = new Text({ text: '▶ PLAY', style: { fontFamily: 'monospace', fontSize: 9, fill: 0x00ff88, fontWeight: 'bold' } });
-  playBtn.position.set(6, 468); rightPanel.addChild(playBtn);
-  const speedTxt = new Text({ text: '1x', style: { fontFamily: 'monospace', fontSize: 9, fill: 0x00ffff } });
-  speedTxt.position.set(60, 468); rightPanel.addChild(speedTxt);
+  playBtn.position.set(6, 428); rightPanel.addChild(playBtn);
+  const speedTxt = new Text({ text: '1x', style: { fontFamily: 'monospace', fontSize: 9, fill: C.text } });
+  speedTxt.position.set(60, 428); rightPanel.addChild(speedTxt);
   // Timeline bar
-  const timelineBg = new Graphics(); timelineBg.rect(6, 488, RIGHT_W-16, 6).fill({ color: 0x1a1a33 }); rightPanel.addChild(timelineBg);
-  const timelineFill = new Graphics(); timelineFill.rect(6, 488, 0, 6).fill({ color: 0xff00ff }); rightPanel.addChild(timelineFill);
+  const timelineBg = new Graphics(); timelineBg.rect(6, 448, RIGHT_W-16, 6).fill({ color: 0x1a1a33 }); rightPanel.addChild(timelineBg);
+  const timelineFill = new Graphics(); timelineFill.rect(6, 448, 0, 6).fill({ color: 0xff00ff }); rightPanel.addChild(timelineFill);
   const timelineLabel = new Text({ text: '00:00', style: { fontFamily: 'monospace', fontSize: 8, fill: C.text } });
-  timelineLabel.position.set(6, 498); rightPanel.addChild(timelineLabel);
+  timelineLabel.position.set(6, 458); rightPanel.addChild(timelineLabel);
   // Click on timeline to seek
   const replayState = { playing: false, speed: 1, index: 0, data: [] as any[] };
+  let draggingTimeline = false;
+  function seekTo(clientX: number) {
+    if (replayState.data.length === 0) return;
+    const rect = timelineBg.getBounds();
+    const localX = clientX - rect.x;
+    const pct = Math.max(0, Math.min(1, localX / (RIGHT_W-16)));
+    replayState.index = pct * replayState.data.length;
+    const snap = replayState.data[Math.floor(replayState.index)];
+    if (snap && snap.agents) {
+      snap.agents.forEach((a: any, i: number) => {
+        if (i < EMPLOYEES.length && !pausedAgents.has(i)) {
+          EMPLOYEES[i].state = a.state as AgentState;
+          EMPLOYEES[i].task = a.task;
+          EMPLOYEES[i].progress = a.progress;
+          EMPLOYEES[i].tokens = a.tokens;
+        }
+      });
+    }
+  }
+  timelineBg.eventMode = 'static'; timelineBg.cursor = 'pointer';
+  timelineBg.hitArea = { contains: (x: number, y: number) => x >= 0 && x <= RIGHT_W-16 && y >= -4 && y <= 10 };
+  timelineBg.on('pointerdown', (e) => { draggingTimeline = true; replayState.playing = false; playBtn.text = '▶ PLAY'; seekTo(e.global.x); });
+  timelineBg.on('pointermove', (e) => { if (draggingTimeline) seekTo(e.global.x); });
+  timelineBg.on('pointerup', () => { draggingTimeline = false; replayState.playing = true; playBtn.text = '⏸ PAUSE'; });
+  timelineBg.on('pointerupoutside', () => { draggingTimeline = false; });
   playBtn.eventMode = 'static'; playBtn.cursor = 'pointer';
   playBtn.on('pointertap', () => {
     replayState.playing = !replayState.playing;
@@ -324,8 +351,11 @@ async function main() {
   }
   function addTaskHistory(name: string, agent: string, tokens: number, ok: boolean) {
     taskHistory.unshift({ name, agent, time: now(), tokens, ok });
-    if (taskHistory.length > 6) taskHistory.pop();
-    histText.text = taskHistory.map(t => `${t.ok?'✅':'❌'} ${t.name}\n   ${t.agent} ${t.tokens}tok`).join('\n');
+    if (taskHistory.length > 4) taskHistory.pop();
+    histText.text = taskHistory.map((t,i) => `${i===0 ? '🆕 ' : (t.ok?'✅':'❌')} ${t.name} (${agent})`).join('\n');
+    setTimeout(() => {
+      histText.text = taskHistory.map(t => `${t.ok?'✅':'❌'} ${t.name} (${agent})`).join('\n');
+    }, 3000);
   }
 
   // ===== DOUBLE-CLICK =====
@@ -391,7 +421,7 @@ async function main() {
     const sortedAgents = EMPLOYEES.slice().sort((a, b) => b.tokens - a.tokens);
     const top3 = sortedAgents.slice(0, 3).map((a, i) => `${i+1}.${a.name} ${a.tokens}`).join('  ');
     bottomStatsText.text = `◆ TOKEN TOP3: ${top3}`;
-    bottomAdapterText.text = 'CrewAI:●ONLINE  OTel:●ONLINE  Langfuse:●SYNC';
+    bottomAdapterText.text = 'CrewAI:  ●  ONLINE        OTel:  ●  ONLINE        Langfuse:  ●  SYNC';
 
     // Token trend line chart
     tokenChartG.clear();
@@ -465,8 +495,8 @@ async function main() {
     updateStats();
     const itemBg = listItems[idx].children[0] as Graphics;
     itemBg.clear();
-    itemBg.rect(0, 0, LEFT_W-8, 34).fill({ color: C.panelBg2, alpha: 0.8 });
-    itemBg.rect(0, 0, LEFT_W-8, 34).stroke({ color: STATE_COLOR[s], alpha: 0.4, width: 1 });
+    itemBg.rect(0, 0, LEFT_W-8, 38).fill({ color: C.panelBg2, alpha: 0.8 });
+    itemBg.rect(0, 0, LEFT_W-8, 38).stroke({ color: STATE_COLOR[s], alpha: 0.4, width: 1 });
   }
 
   function walkTo(idx: number, tx: number, ty: number) {
@@ -611,11 +641,30 @@ async function main() {
           // Update agents from server
           if (msg.agents && msg.agents.length > 0) {
             msg.agents.forEach((a: any, i: number) => {
-              if (i < EMPLOYEES.length) {
+              if (i < EMPLOYEES.length && !pausedAgents.has(i)) {
+                const oldState = EMPLOYEES[i].state;
                 EMPLOYEES[i].state = a.state as AgentState;
                 EMPLOYEES[i].task = a.task;
                 EMPLOYEES[i].progress = a.progress;
                 EMPLOYEES[i].tokens = a.tokens;
+                // Trigger walking on state change
+                if (a.state === 'calling_tool' && oldState !== 'calling_tool') {
+                  walkTo(i, kitchenPos.x, kitchenPos.y);
+                }
+                if (a.state === 'error' && oldState !== 'error') {
+                  walkTo(i, meetingPos.x, meetingPos.y);
+                }
+                if ((a.state === 'success' || a.state === 'idle' || a.state === 'writing') &&
+                    oldState === 'calling_tool' || oldState === 'error') {
+                  returnToDesk(i);
+                }
+                // Update bubble
+                if (bubbles[i]) {
+                  world.removeChild(bubbles[i]);
+                  const nb = makeBubble(STATE_THOUGHT[a.state as AgentState] || '...', a.state);
+                  nb.position.set(sprites[i].x, sprites[i].y - SCENE_H*sprites[i].scale.y - 5);
+                  world.addChild(nb); bubbles[i] = nb;
+                }
               }
             });
           }
@@ -638,6 +687,131 @@ async function main() {
   } catch (e) {
     console.log('[WS] Connection failed, using local simulation');
   }
+
+  // ===== BIG SCREEN MODE (F11 / ESC) =====
+  let bigScreen = false;
+  let mobileMode = app.screen.width < 768;
+  let drawerOpen = ''; // '', 'agents', 'monitor'
+  let drawerAnim = 0; // 0 = closed, 1 = open
+  let drawerTarget = 0;
+  let drawerOverlay: Graphics | null = null;
+  const sidePanels = [sidebar, rightPanel, taskBoard, topBar, bottomBar];
+
+  // Mobile drawer buttons
+  const drawerBar = new Graphics();
+  drawerBar.rect(0, app.screen.height - 40, app.screen.width, 40).fill({ color: 0x111122, alpha: 0.9 }).stroke({ color: 0xff00ff, width: 1 });
+  app.stage.addChild(drawerBar);
+  const btnAgents = new Text({ text: '👥 员工列表', style: { fontFamily: 'monospace', fontSize: 11, fill: 0x80f0ff } });
+  btnAgents.position.set(20, app.screen.height - 28); app.stage.addChild(btnAgents);
+  const btnMonitor = new Text({ text: '📊 监控面板', style: { fontFamily: 'monospace', fontSize: 11, fill: 0xff00ff } });
+  btnMonitor.position.set(app.screen.width/2 + 20, app.screen.height - 28); app.stage.addChild(btnMonitor);
+  btnAgents.eventMode = 'static'; btnAgents.cursor = 'pointer';
+  btnMonitor.eventMode = 'static'; btnMonitor.cursor = 'pointer';
+  btnAgents.on('pointertap', () => { drawerOpen = drawerOpen === 'agents' ? '' : 'agents'; drawerTarget = drawerOpen ? 1 : 0; });
+  btnMonitor.on('pointertap', () => { drawerOpen = drawerOpen === 'monitor' ? '' : 'monitor'; drawerTarget = drawerOpen ? 1 : 0; });
+
+  function addOverlay() {
+    if (drawerOverlay) app.stage.removeChild(drawerOverlay);
+    drawerOverlay = new Graphics();
+    drawerOverlay.rect(0, 0, app.screen.width, app.screen.height - 40).fill({ color: 0x000000, alpha: 0.5 });
+    drawerOverlay.eventMode = 'static';
+    drawerOverlay.on('pointertap', () => { drawerOpen = ''; drawerTarget = 0; });
+    app.stage.addChild(drawerOverlay);
+  }
+
+  function updateDrawer() {
+    if (mobileMode) {
+      drawerBar.visible = true; btnAgents.visible = true; btnMonitor.visible = true;
+      topBar.visible = false; taskBoard.visible = false; bottomBar.visible = false;
+      sidebar.visible = true; rightPanel.visible = true;
+      const slideY = (1 - drawerAnim) * (app.screen.height - 80);
+      sidebar.position.set(0, 40 + slideY);
+      rightPanel.position.set(app.screen.width - RIGHT_W, 40 + slideY);
+      sidebar.alpha = drawerAnim;
+      rightPanel.alpha = drawerAnim;
+      if (drawerOverlay) { drawerOverlay.alpha = drawerAnim * 0.5; }
+    } else {
+      drawerBar.visible = false; btnAgents.visible = false; btnMonitor.visible = false;
+      if (drawerOverlay) { app.stage.removeChild(drawerOverlay); drawerOverlay = null; }
+      const showPanels = !bigScreen;
+      sidePanels.forEach(p => { p.visible = showPanels; p.alpha = 1; });
+      sidebar.position.set(0, 48);
+      rightPanel.position.set(app.screen.width - RIGHT_W, 48);
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F11' || e.key === 'f11') {
+      e.preventDefault();
+      bigScreen = !bigScreen;
+      updateDrawer();
+    }
+    if (e.key === 'Escape' && bigScreen) {
+      bigScreen = false;
+      updateDrawer();
+    }
+  });
+  window.addEventListener('resize', () => {
+    mobileMode = app.screen.width < 768;
+    updateDrawer();
+  });
+  updateDrawer();
+
+  // ===== USER AVATAR (click map to move) =====
+  const userAvatar = new Graphics();
+  userAvatar.circle(0, 0, 5).fill({ color: 0xffff00 }).stroke({ color: 0xffffff, width: 1.5 });
+  userAvatar.position.set(LEFT_W + MID_W/2, TOP_H + MID_H/2);
+  userAvatar.zIndex = 9999;
+  app.stage.addChild(userAvatar);
+  let userTarget = { x: userAvatar.x, y: userAvatar.y };
+  let selectedAgent = -1;
+  const pausedAgents = new Set<number>();
+
+  // Click on map to move user avatar
+  world.eventMode = 'static';
+  world.cursor = 'crosshair';
+  world.on('pointertap', (e) => {
+    if (bigScreen) return;
+    const pos = world.toLocal(e.global);
+    userTarget.x = pos.x;
+    userTarget.y = pos.y;
+  });
+
+  // Popup menu when user near an agent
+  const popupMenu = new Container(); popupMenu.visible = false; popupMenu.alpha = 0; popupMenu.scale.set(0.8);
+  const popupBg = new Graphics(); popupBg.roundRect(0, 0, 90, 64, 4).fill({ color: 0x111122, alpha: 0.95 }).stroke({ color: 0xff00ff, width: 1 });
+  popupMenu.addChild(popupBg);
+  const popupBtn1 = new Text({ text: '⏸ Pause', style: { fontFamily: 'monospace', fontSize: 8, fill: 0xffcc00 } });
+  popupBtn1.position.set(6, 6); popupMenu.addChild(popupBtn1);
+  const popupBtn2 = new Text({ text: '▶ Resume', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00ff88 } });
+  popupBtn2.position.set(6, 24); popupMenu.addChild(popupBtn2);
+  const popupBtn3 = new Text({ text: '✓ Approve', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00d4ff } });
+  popupBtn3.position.set(6, 42); popupMenu.addChild(popupBtn3);
+  popupBtn1.eventMode = 'static'; popupBtn1.cursor = 'pointer';
+  popupBtn2.eventMode = 'static'; popupBtn2.cursor = 'pointer';
+  popupBtn3.eventMode = 'static'; popupBtn3.cursor = 'pointer';
+  popupBtn1.on('pointertap', () => {
+    if (selectedAgent >= 0) { pausedAgents.add(selectedAgent); popupBtn1.style.fill = 0x666666; }
+  });
+  popupBtn2.on('pointertap', () => {
+    if (selectedAgent >= 0) { pausedAgents.delete(selectedAgent); popupBtn1.style.fill = 0xffcc00; }
+  });
+  popupBtn3.on('pointertap', () => {
+    if (selectedAgent >= 0) {
+      EMPLOYEES[selectedAgent].progress = 100;
+      EMPLOYEES[selectedAgent].state = 'success';
+    }
+  });
+  app.stage.addChild(popupMenu);
+
+  // ===== TASK DEPENDENCY VISUALIZATION =====
+  const depLayer = new Graphics();
+  depLayer.zIndex = 50;
+  world.addChild(depLayer);
+  const depChains: number[][] = [
+    [0, 1, 2],
+    [3, 4, 5],
+  ];
 
   // ===== ANIMATION =====
   app.ticker.add((ticker) => {
@@ -666,9 +840,145 @@ async function main() {
       timelineLabel.text = `${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
     }
 
+    // Drawer animation
+    if (drawerAnim !== drawerTarget) {
+      drawerAnim += (drawerTarget - drawerAnim) * 0.15;
+      if (Math.abs(drawerAnim - drawerTarget) < 0.02) drawerAnim = drawerTarget;
+      updateDrawer();
+    }
+
+    // User avatar movement
+    const udx = userTarget.x - userAvatar.x, udy = userTarget.y - userAvatar.y;
+    const udist = Math.sqrt(udx*udx + udy*udy);
+    if (udist > 2) {
+      userAvatar.x += (udx/udist) * 2;
+      userAvatar.y += (udy/udist) * 2;
+    } else {
+      // Check if near any agent, show popup
+      let nearAgent = -1;
+      for (let i = 0; i < sprites.length; i++) {
+        const sdx = sprites[i].x - userAvatar.x, sdy = sprites[i].y - userAvatar.y;
+        if (Math.sqrt(sdx*sdx + sdy*sdy) < 30) nearAgent = i;
+      }
+      if (nearAgent >= 0) {
+        selectedAgent = nearAgent;
+        popupMenu.visible = true;
+        // Smart edge avoidance
+        let px = userAvatar.x + 10, py = userAvatar.y - 30;
+        if (px + 90 > app.screen.width - 5) px = userAvatar.x - 100;
+        if (px < 5) px = userAvatar.x + 10;
+        if (py < 5) py = userAvatar.y + 15;
+        if (py + 64 > app.screen.height - 5) py = userAvatar.y - 80;
+        popupMenu.position.set(px, py);
+        popupMenu.alpha = Math.min(1, popupMenu.alpha + 0.15);
+        const s = Math.min(1, popupMenu.scale.x + 0.03);
+        popupMenu.scale.set(s);
+      } else {
+        selectedAgent = -1;
+        popupMenu.alpha = Math.max(0, popupMenu.alpha - 0.15);
+        const s = Math.max(0.8, popupMenu.scale.x - 0.03);
+        popupMenu.scale.set(s);
+        if (popupMenu.alpha <= 0) popupMenu.visible = false;
+      }
+    }
+
+    // Draw dependency lines with dynamic color
+    depLayer.clear();
+    depChains.forEach(chain => {
+      for (let j = 0; j < chain.length - 1; j++) {
+        const a = sprites[chain[j]], b = sprites[chain[j+1]];
+        if (!a || !b) continue;
+        const aDone = EMPLOYEES[chain[j]].state === 'success';
+        const color = aDone ? 0x666688 : 0xb44dff;
+        const alpha = aDone ? 0.3 : 0.8;
+        depLayer.moveTo(a.x, a.y - 10).lineTo(b.x, b.y - 10);
+        depLayer.stroke({ color, width: 1.5, alpha });
+        depLayer.moveTo(a.x, a.y - 10).lineTo(b.x, b.y - 10);
+        depLayer.stroke({ color, width: 3, alpha: alpha * 0.2 });
+        const ang = Math.atan2(b.y - a.y, b.x - a.x);
+        depLayer.moveTo(b.x - Math.cos(ang)*6, b.y - 10 - Math.sin(ang)*6);
+        depLayer.lineTo(b.x - Math.cos(ang+0.5)*6, b.y - 10 - Math.sin(ang+0.5)*6);
+        depLayer.stroke({ color, width: 1.5, alpha });
+      }
+    });
+
+    // ===== GROUP CHAT: state-aware smart bubbles =====
+    const CHAT_BY_STATE: Record<string, string[]> = {
+      writing: ['这个函数快写完了', '正在调接口', 'UI组件写好了', '查下文档'],
+      thinking: ['这个逻辑有点绕', '让我想想方案', '需求又变了', '先捋一下思路'],
+      calling_tool: ['我去调个API', '等我查个资料', '调个工具试试', '去趟茶水间'],
+      error: ['报错了，帮我看看', '这个bug真坑', '又挂了...', '谁来帮我debug'],
+      success: ['搞定了！', '测试通过了', '提交了PR', '收工！'],
+      idle: ['等等任务', '摸鱼中', '喝杯咖啡', '今天好闲'],
+      dead_loop: ['又转起来了...', '死循环了', '停不下来了']
+    };
+    for (let i = 0; i < sprites.length; i++) {
+      for (let j = i+1; j < sprites.length; j++) {
+        const dx = sprites[i].x - sprites[j].x, dy = sprites[i].y - sprites[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 40 && dist > 5) {
+          const stateI = EMPLOYEES[i].state;
+          const stateJ = EMPLOYEES[j].state;
+          const linesI = CHAT_BY_STATE[stateI] || CHAT_BY_STATE.idle;
+          const linesJ = CHAT_BY_STATE[stateJ] || CHAT_BY_STATE.idle;
+          const chatI = linesI[Math.floor(Date.now() / 4000) % linesI.length];
+          const chatJ = linesJ[Math.floor(Date.now() / 4000 + 2) % linesJ.length];
+          if (bubbles[i] && !bubbles[i].children.some(c => c.text === chatI)) {
+            const chatTxt = new Text({ text: chatI, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffffff } });
+            chatTxt.position.set(0, -15);
+            bubbles[i].addChild(chatTxt);
+          }
+          if (bubbles[j] && !bubbles[j].children.some(c => c.text === chatJ)) {
+            const chatTxt = new Text({ text: chatJ, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffffff } });
+            chatTxt.position.set(0, -15);
+            bubbles[j].addChild(chatTxt);
+          }
+        }
+      }
+    }
+
+    // ===== MEETING: 3+ agents in meeting room area =====
+    const meetingAgents: number[] = [];
+    for (let i = 0; i < sprites.length; i++) {
+      const tileX = sprites[i].x / 16, tileY = sprites[i].y / 16;
+      // Meeting room is around x:14-20, y:3-8 (meetingPos area)
+      if (tileX > 14 && tileX < 22 && tileY > 3 && tileY < 10) {
+        meetingAgents.push(i);
+      }
+    }
+    if (meetingAgents.length >= 3) {
+      meetingAgents.forEach(i => {
+        if (bubbles[i]) {
+          const hasMeeting = bubbles[i].children.some(c => c.text === '💬 会议中');
+          if (!hasMeeting) {
+            const mt = new Text({ text: '💬 会议中', style: { fontFamily: 'monospace', fontSize: 7, fill: 0xb46bff } });
+            mt.position.set(0, -25);
+            bubbles[i].addChild(mt);
+          }
+        }
+      });
+    }
+
+    // Auto-trigger next task in dependency chain
+    depChains.forEach(chain => {
+      for (let j = 0; j < chain.length - 1; j++) {
+        if (EMPLOYEES[chain[j]].state === 'success' &&
+            EMPLOYEES[chain[j+1]].state === 'idle') {
+          EMPLOYEES[chain[j+1]].state = 'writing';
+        }
+      }
+    });
+
     for (let i = 0; i < EMPLOYEES.length; i++) {
       const emp = EMPLOYEES[i];
       const spr = sprites[i];
+      // Pause visual: gray out
+      const isPaused = pausedAgents.has(i);
+      spr.alpha = isPaused ? 0.35 : 1;
+      // Approved visual
+      if (emp.state === 'success' && emp.progress >= 100) {
+        spr.alpha = 1;
+      }
       if (emp.walking) {
         const dx = emp.targetX - spr.x, dy = emp.targetY - spr.y;
         const dist = Math.sqrt(dx*dx+dy*dy);

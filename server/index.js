@@ -11,9 +11,34 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT || '5175');
 
 // ===== Agent Registry =====
-const agents = new Map(); // agentId -> { id, name, role, state, task, progress, tokens, seat, lastSeen, trace[] }
-const history = []; // [{ ts, agents: [...] }] state snapshots, keep last hour
-const MAX_HISTORY = 720; // 720 * 5s = 1 hour
+const agents = new Map();
+const history = [];
+const MAX_HISTORY = 720;
+
+// ===== Config Hot Reload =====
+const CONFIG_PATH = path.join(__dirname, 'config.yaml');
+let config = { adapters: { crewai: {enabled:true}, otel: {enabled:true}, langfuse: {enabled:true} } };
+
+function loadConfig() {
+  try {
+    const raw = fs.readFileSync(CONFIG_PATH, 'utf-8');
+    // Simple YAML parser (no external deps)
+    const lines = raw.split('\n');
+    let section = '', sub = '';
+    lines.forEach(line => {
+      if (line.match(/^  (\w+):$/)) { section = line.trim().replace(':',''); sub=''; }
+      else if (line.match(/^    (\w+):$/)) { sub = line.trim().replace(':',''); }
+      else if (line.match(/^      (\w+):\s*(.+)$/)) {
+        const [k,v] = line.trim().split(': ');
+        if (!config.adapters[section]) config.adapters[section] = {};
+        config.adapters[section][k] = v.replace(/"/g,'');
+      }
+    });
+    console.log('[CONFIG] Reloaded from', CONFIG_PATH);
+  } catch(e) { console.log('[CONFIG] Using defaults'); }
+}
+loadConfig();
+fs.watch(CONFIG_PATH, () => { setTimeout(loadConfig, 100); });
 const seats = [
   { x: 2, y: 13 }, { x: 6, y: 13 }, { x: 10, y: 13 }, { x: 14, y: 13 },
   { x: 2, y: 18 }, { x: 6, y: 18 }, { x: 10, y: 18 }, { x: 14, y: 18 },

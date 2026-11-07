@@ -1,0 +1,19 @@
+# Agent Control Room Adapter Configuration
+# Modify this file and changes take effect immediately (no restart needed)
+
+adapters:
+  crewai:
+    enabled: true
+    endpoint: "http://localhost:8000"
+  otel:
+    enabled: true
+    endpoint: "http://localhost:4318"
+  langfuse:
+    enabled: true
+    endpoint: "http://localhost:3000"
+
+server:
+  port: 5175
+  heartbeat_interval: 5000
+  offline_timeout: 10000
+  remove_timeout: 30000
