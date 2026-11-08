@@ -150,12 +150,16 @@ async function main() {
   const searchTxt = new Text({ text: '🔍 search...', style: { fontFamily: 'monospace', fontSize: 10, fill: C.textDim } });
   searchTxt.position.set(218, 16); topBar.addChild(searchTxt);
   const adapterColors = [0x00ffff, 0xff00ff, 0x9d00ff];
+  const adapterStatusTexts: Text[] = [];
   ['CrewAI','OTel','Langfuse'].forEach((label, i) => {
-    const ax = 380 + i * 80;
+    const ax = 380 + i * 100;
     const dg = new Graphics(); dg.circle(ax, 23, 3.5).fill({ color: adapterColors[i] }); dg.circle(ax, 23, 6).fill({ color: adapterColors[i], alpha: 0.3 });
     topBar.addChild(dg);
     const txt = new Text({ text: label, style: { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff, alpha: 0.7 } });
     txt.position.set(ax+8, 18); topBar.addChild(txt);
+    const st = new Text({ text: '···', style: { fontFamily: 'monospace', fontSize: 7, fill: 0x888888 } });
+    st.position.set(ax+8, 28); topBar.addChild(st);
+    adapterStatusTexts.push(st);
   });
   const statsText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 11, fill: C.text, fontWeight: 'bold' } });
   statsText.position.set(630, 18); topBar.addChild(statsText);
@@ -441,8 +445,6 @@ async function main() {
   // Token TOP3 + Adapters (top row of bottom bar)
   const bottomStatsText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00ffff, lineHeight: 12 } });
   bottomStatsText.position.set(10, BOT_H-12); bottomBar.addChild(bottomStatsText);
-  const bottomAdapterText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00ff88, lineHeight: 12 } });
-  bottomAdapterText.position.set(200, BOT_H-12); bottomBar.addChild(bottomAdapterText);
   const termLines: string[] = [];
   clearBtn.eventMode = 'static';
   clearBtn.on('pointerdown', () => { termLines.length = 0; termText.text = ''; });
@@ -535,7 +537,10 @@ async function main() {
     const sortedAgents = EMPLOYEES.slice().sort((a, b) => b.tokens - a.tokens);
     const top3 = sortedAgents.slice(0, 3).map((a, i) => `${i+1}.${a.name} ${a.tokens}`).join('  ');
     bottomStatsText.text = `◆ TOKEN TOP3: ${top3}`;
-    bottomAdapterText.text = 'CrewAI:  ●  ONLINE        OTel:  ●  ONLINE        Langfuse:  ●  SYNC';
+    // Update top bar adapter status
+    adapterStatusTexts[0].text = 'ONLINE'; adapterStatusTexts[0].style.fill = 0x00ff88;
+    adapterStatusTexts[1].text = 'ONLINE'; adapterStatusTexts[1].style.fill = 0x00ff88;
+    adapterStatusTexts[2].text = 'SYNC'; adapterStatusTexts[2].style.fill = 0xffcc00;
 
     // Token trend line chart
     tokenChartG.clear();
