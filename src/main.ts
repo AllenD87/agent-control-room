@@ -69,14 +69,16 @@ function makeBubble(text: string, state: string): Container {
   const shortText = text.length > 10 ? text.slice(0, 8) + '…' : text;
   const labelTxt = new Text({ text: shortText, style: { fontFamily: 'sans-serif', fontSize: 7, fill: colors.fg, fontWeight: 'bold' } });
   const padX = 4, padY = 2, gap = 3;
-  const w = iconTxt.width + gap + labelTxt.width + padX*2;
-  const h = Math.max(iconTxt.height, labelTxt.height) + padY*2;
+  const contentW = iconTxt.width + gap + labelTxt.width;
+  const contentH = Math.max(iconTxt.height, labelTxt.height);
+  const w = contentW + padX*2;
+  const h = contentH + padY*2;
   const g = new Graphics();
   g.roundRect(-w/2, -(h+2), w, h, 3).fill({ color: colors.bg, alpha: 0.95 }).stroke({ color: colors.border, width: 1 });
   g.moveTo(-2, -2).lineTo(2, -2).lineTo(0, 0).closePath().fill({ color: colors.bg, alpha: 0.95 });
-  // Center vertically: position from top of bubble
-  iconTxt.position.set(-w/2+padX, -(h+2)+(h-iconTxt.height)/2);
-  labelTxt.position.set(-w/2+padX+iconTxt.width+gap, -(h+2)+(h-labelTxt.height)/2);
+  // Center content horizontally: start at -contentW/2
+  iconTxt.position.set(-contentW/2, -(h+2) + padY + (contentH - iconTxt.height)/2);
+  labelTxt.position.set(-contentW/2 + iconTxt.width + gap, -(h+2) + padY + (contentH - labelTxt.height)/2);
   c.addChild(g, iconTxt, labelTxt);
   return c;
 }
