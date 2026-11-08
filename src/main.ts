@@ -380,13 +380,18 @@ async function main() {
       const t = Date.now();
       if (closest === lastClickIdx && t - lastClickTime < 300) {
         const emp = EMPLOYEES[closest];
-        let txt = `${emp.name} (${emp.role}) [P:${emp.priority}]\n`;
-        txt += `Status: ${STATE_LABEL[emp.state]}\n`;
-        txt += `Progress: ${Math.round(emp.progress)}%\n`;
-        txt += `Tokens: ${emp.tokens}\n`;
-        txt += `Task: ${emp.task}\n\n-- stack --\n`;
-        for (const step of emp.trace.slice(-5)) txt += `[${step.time}] ${step.action}\n`;
+        let txt = `┌─ ${emp.name} (${emp.role})\n`;
+        txt += `├─ Status: ${STATE_LABEL[emp.state]}\n`;
+        txt += `├─ Progress: ${Math.round(emp.progress)}%\n`;
+        txt += `├─ Tokens: ${emp.tokens}\n`;
+        txt += `├─ Task: ${emp.task}\n`;
+        txt += `└─ Call stack (last 5):\n`;
+        emp.trace.slice(-5).forEach((step, i) => {
+          const isErr = step.action.includes('error') || step.action.includes('fail');
+          txt += `   ${isErr?'🔴':'├─'} [${step.time}] ${step.action}\n`;
+        });
         traceInfo.text = txt;
+        traceInfo.style.fill = emp.state === 'error' ? 0xff3366 : C.text;
       }
       lastClickTime = t; lastClickIdx = closest;
     }
@@ -961,11 +966,10 @@ async function main() {
       }
     }
 
-    // ===== MEETING: 3+ agents in meeting room area =====
+    // ===== MEETING: 3+ agents in meeting room, then disperse =====
     const meetingAgents: number[] = [];
     for (let i = 0; i < sprites.length; i++) {
       const tileX = sprites[i].x / 16, tileY = sprites[i].y / 16;
-      // Meeting room is around x:14-20, y:3-8 (meetingPos area)
       if (tileX > 14 && tileX < 22 && tileY > 3 && tileY < 10) {
         meetingAgents.push(i);
       }
@@ -981,6 +985,14 @@ async function main() {
           }
         }
       });
+    } else {
+      // Meeting ended - clear meeting bubbles and walk back
+      for (let i = 0; i < bubbles.length; i++) {
+        if (bubbles[i]) {
+          const meetingChild = bubbles[i].children.find(c => c.text === '💬 会议中');
+          if (meetingChild) bubbles[i].removeChild(meetingChild);
+        }
+      }
     }
 
     // Auto-trigger next task in dependency chain
@@ -993,13 +1005,25 @@ async function main() {
       }
     });
 
-    // Alert: flash dead_loop and error agents
+    // Alert: flash dead_loop and error agents, click to clear
     const alertFlash = Math.floor(Date.now() / 500) % 2 === 0;
     for (let i = 0; i < sprites.length; i++) {
       if (EMPLOYEES[i].state === 'dead_loop' || EMPLOYEES[i].state === 'error') {
         sprites[i].alpha = alertFlash ? 1 : 0.5;
       }
     }
+    // Click on alerting agent to clear
+    world.on('pointertap', (e) => {
+      const pos = world.toLocal(e.global);
+      for (let i = 0; i < sprites.length; i++) {
+        const dx = pos.x - sprites[i].x, dy = pos.y - sprites[i].y;
+        if (Math.sqrt(dx*dx + dy*dy) < 15 &&
+            (EMPLOYEES[i].state === 'error' || EMPLOYEES[i].state === 'dead_loop')) {
+          EMPLOYEES[i].state = 'idle';
+          EMPLOYEES[i].progress = 0;
+        }
+      }
+    });
 
     for (let i = 0; i < EMPLOYEES.length; i++) {
       const emp = EMPLOYEES[i];
