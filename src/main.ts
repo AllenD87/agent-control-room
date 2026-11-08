@@ -162,15 +162,17 @@ async function main() {
     alertPanel.visible = panelOpen;
     if (panelOpen) {
       const alerts = EMPLOYEES.map((e, i) => ({ i, name: e.name, state: e.state })).filter(e => e.state === 'error' || e.state === 'dead_loop');
-      let txt = '⚠️ ALERTS (' + alerts.length + ')  [×=clear]\n';
+      let txt = '⚠️ ALERTS (' + alerts.length + ')\n';
       alerts.forEach((a, idx) => {
         const color = a.state === 'error' ? '🔴' : '🟡';
-        txt += `${color} ${a.name} - ${a.state}   [×]\n`;
+        txt += `${color} ${a.name} - ${a.state}  [×]\n`;
       });
-      txt += '\n[click bell to close]';
+      txt += `\n[ALL CLEAR]  [close]`;
       alertListText.text = txt;
-      alertPanel.rect(0, 0, 260, 20 + alerts.length * 14 + 20).fill({ color: 0x111122 });
-      alertPanel.rect(0, 0, 260, 20 + alerts.length * 14 + 20).stroke({ color: C.border, alpha: 0.7, width: 1.5 });
+      const h = 20 + alerts.length * 14 + 30;
+      alertPanel.clear();
+      alertPanel.rect(0, 0, 260, h).fill({ color: 0x111122 });
+      alertPanel.rect(0, 0, 260, h).stroke({ color: C.border, alpha: 0.7, width: 1.5 });
     }
   });
   // Click on alert panel to clear first alert
@@ -1050,9 +1052,19 @@ async function main() {
             mt.position.set(0, -25);
             bubbles[i].addChild(mt);
           }
-          // Rotating discussion content
-          const discussLines = ['这个需求下周上线', '前端先做，后端并行', '测试覆盖核心流程就行', '有问题随时拉群'];
-          const discuss = discussLines[Math.floor(Date.now() / 4000) % discussLines.length];
+          // Rotating discussion content by task type
+          const discussByType: Record<string, string[]> = {
+            frontend: ['UI组件下周联调', '样式要对齐设计稿', '响应式适配做完'],
+            backend: ['API接口文档更新了', '数据库加个索引', '接口性能优化'],
+            test: ['测试用例补全', '覆盖率到80%', 'bug复现了'],
+            general: ['这个需求下周上线', '有问题随时拉群', '排期再确认下']
+          };
+          const empTask = EMPLOYEES[i].task;
+          const ttype = /ui|css|page|组件|样式/i.test(empTask) ? 'frontend' :
+                        /api|db|接口|deploy|后端/i.test(empTask) ? 'backend' :
+                        /test|测试|bug|用例/i.test(empTask) ? 'test' : 'general';
+          const lines = discussByType[ttype];
+          const discuss = lines[Math.floor(Date.now() / 4000) % lines.length];
           const hasDiscuss = bubbles[i].children.some(c => c.text && c.text.startsWith('💭'));
           if (hasDiscuss) {
             const old = bubbles[i].children.find(c => c.text && c.text.startsWith('💭'));
