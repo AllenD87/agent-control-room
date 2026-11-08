@@ -1019,7 +1019,7 @@ async function main() {
       }
     });
 
-    // ===== GROUP CHAT: state + task-type aware =====
+    // ===== GROUP CHAT: foot-level bubbles, separate from head =====
     const CHAT_BY_STATE: Record<string, string[]> = {
       writing: ['快写完了', '调接口中', 'UI搞定', '查文档'],
       thinking: ['有点绕', '想想方案', '需求变了', '捋思路'],
@@ -1029,13 +1029,18 @@ async function main() {
       idle: ['等任务', '摸鱼中', '喝咖啡', '好闲'],
       dead_loop: ['又转起来了', '死循环', '停不下']
     };
-    function detectTaskType(task: string): string {
-      if (/ui|css|组件|样式|页面|前端|login|page/i.test(task)) return 'frontend';
-      if (/api|db|接口|后端|database|deploy|backend/i.test(task)) return 'backend';
-      if (/test|测试|bug|用例|coverage/i.test(task)) return 'test';
-      if (/prd|需求|排期|product|review/i.test(task)) return 'product';
-      return 'general';
+    // Create foot-level chat containers once
+    if (!(window as any).__footBubbles) {
+      (window as any).__footBubbles = [];
+      for (let i = 0; i < sprites.length; i++) {
+        const fc = new Container();
+        world.addChild(fc);
+        (window as any).__footBubbles.push(fc);
+      }
     }
+    const footBubbles = (window as any).__footBubbles as Container[];
+    // Clear all foot bubbles first
+    footBubbles.forEach(fc => fc.removeChildren());
     for (let i = 0; i < sprites.length; i++) {
       for (let j = i+1; j < sprites.length; j++) {
         const dx = sprites[i].x - sprites[j].x, dy = sprites[i].y - sprites[j].y;
@@ -1047,21 +1052,24 @@ async function main() {
           const linesJ = CHAT_BY_STATE[stateJ] || CHAT_BY_STATE.idle;
           const chatI = linesI[Math.floor(Date.now() / 4000) % linesI.length];
           const chatJ = linesJ[Math.floor(Date.now() / 4000 + 2) % linesJ.length];
-          if (bubbles[i]) {
-            // Remove old chat bubble child, add new
-            const oldChat = bubbles[i].children.find(c => c.text && c.text.startsWith('💬'));
-            if (oldChat) bubbles[i].removeChild(oldChat);
-            const chatTxt = new Text({ text: '💬' + chatI, style: { fontFamily: 'monospace', fontSize: 6, fill: 0x80f0ff } });
-            chatTxt.position.set(0, -12);
-            bubbles[i].addChild(chatTxt);
-          }
-          if (bubbles[j]) {
-            const oldChat = bubbles[j].children.find(c => c.text && c.text.startsWith('💬'));
-            if (oldChat) bubbles[j].removeChild(oldChat);
-            const chatTxt = new Text({ text: '💬' + chatJ, style: { fontFamily: 'monospace', fontSize: 6, fill: 0x80f0ff } });
-            chatTxt.position.set(0, -12);
-            bubbles[j].addChild(chatTxt);
-          }
+          // Foot bubble for i (cyan border)
+          const fi = footBubbles[i];
+          fi.position.set(sprites[i].x, sprites[i].y + 16);
+          const bgI = new Graphics();
+          bgI.roundRect(-40, -7, 80, 11, 3).fill({ color: 0x111122, alpha: 0.9 }).stroke({ color: 0x80f0ff, width: 1 });
+          fi.addChild(bgI);
+          const txtI = new Text({ text: chatI, style: { fontFamily: 'monospace', fontSize: 6, fill: 0x80f0ff } });
+          txtI.position.set(-36, -5);
+          fi.addChild(txtI);
+          // Foot bubble for j (yellow border)
+          const fj = footBubbles[j];
+          fj.position.set(sprites[j].x, sprites[j].y + 16);
+          const bgJ = new Graphics();
+          bgJ.roundRect(-40, -7, 80, 11, 3).fill({ color: 0x111122, alpha: 0.9 }).stroke({ color: 0xffaa00, width: 1 });
+          fj.addChild(bgJ);
+          const txtJ = new Text({ text: chatJ, style: { fontFamily: 'monospace', fontSize: 6, fill: 0xffaa00 } });
+          txtJ.position.set(-36, -5);
+          fj.addChild(txtJ);
         }
       }
     }
