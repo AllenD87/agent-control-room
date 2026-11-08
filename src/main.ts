@@ -149,13 +149,28 @@ async function main() {
   const alertCount = new Text({ text: '0', style: { fontFamily: 'monospace', fontSize: 8, fill: 0xffffff, fontWeight: 'bold' } });
   alertCount.position.set(W-205, 14); topBar.addChild(alertCount);
   alertBell.eventMode = 'static'; alertBell.cursor = 'pointer';
+  const alertPanel = new Graphics();
+  alertPanel.position.set(W - 280, 40);
+  alertPanel.visible = false;
+  topBar.addChild(alertPanel);
+  const alertListText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 8, fill: C.text, wordWrap: true, wordWrapWidth: 260, lineHeight: 14 } });
+  alertListText.position.set(10, 10);
+  alertPanel.addChild(alertListText);
+  let panelOpen = false;
   alertBell.on('pointertap', () => {
-    const alerts = EMPLOYEES.map((e, i) => ({ i, name: e.name, state: e.state })).filter(e => e.state === 'error' || e.state === 'dead_loop');
-    if (alerts.length > 0) {
-      const first = alerts[0];
-      sprites[first.i].x = spawnPoints[first.i].x;
-      sprites[first.i].y = spawnPoints[first.i].y;
-      EMPLOYEES[first.i].state = 'idle';
+    panelOpen = !panelOpen;
+    alertPanel.visible = panelOpen;
+    if (panelOpen) {
+      const alerts = EMPLOYEES.map((e, i) => ({ i, name: e.name, state: e.state })).filter(e => e.state === 'error' || e.state === 'dead_loop');
+      let txt = '⚠️ ALERTS (' + alerts.length + ')\n';
+      alerts.forEach(a => {
+        const color = a.state === 'error' ? '🔴' : '🟡';
+        txt += `${color} ${a.name} - ${a.state}\n`;
+      });
+      txt += '\n[click bell to close]';
+      alertListText.text = txt;
+      alertPanel.rect(0, 0, 260, 20 + alerts.length * 14).fill({ color: 0x111122 });
+      alertPanel.rect(0, 0, 260, 20 + alerts.length * 14).stroke({ color: C.border, alpha: 0.7, width: 1.5 });
     }
   });
 
@@ -994,12 +1009,24 @@ async function main() {
       }
     }
 
-    // ===== MEETING: 3+ agents in meeting room, then auto-disperse =====
+    // ===== MEETING: initiator → notify → attend → meet → dismiss =====
+    let meetingStart = 0;
     const meetingAgents: number[] = [];
     for (let i = 0; i < sprites.length; i++) {
       const tileX = sprites[i].x / 16, tileY = sprites[i].y / 16;
       if (tileX > 14 && tileX < 22 && tileY > 3 && tileY < 10) {
         meetingAgents.push(i);
+      }
+    }
+    // Initiator (Alice, i=0) walks to meeting room every 30s
+    if (Math.floor(Date.now() / 30000) % 2 === 0 && !meetingStart) {
+      // Alice heads to meeting room
+      sprites[0].x += (16*18 - sprites[0].x) * 0.01;
+      sprites[0].y += (16*6 - sprites[0].y) * 0.01;
+      if (bubbles[0] && !bubbles[0].children.some(c => c.text === '💬 召集会议')) {
+        const invite = new Text({ text: '💬 召集会议', style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffaa00 } });
+        invite.position.set(0, -25);
+        bubbles[0].addChild(invite);
       }
     }
     if (meetingAgents.length >= 3) {
@@ -1021,6 +1048,8 @@ async function main() {
           if (bubbles[i]) {
             const meetingChild = bubbles[i].children.find(c => c.text === '💬 会议中');
             if (meetingChild) bubbles[i].removeChild(meetingChild);
+            const inviteChild = bubbles[i].children.find(c => c.text === '💬 召集会议');
+            if (inviteChild) bubbles[i].removeChild(inviteChild);
           }
         });
         meetingStart = 0;
