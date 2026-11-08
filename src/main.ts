@@ -1021,13 +1021,13 @@ async function main() {
 
     // ===== GROUP CHAT: foot-level bubbles, separate from head =====
     const CHAT_BY_STATE: Record<string, string[]> = {
-      writing: ['快写完了', '调接口中', 'UI搞定', '查文档'],
-      thinking: ['有点绕', '想想方案', '需求变了', '捋思路'],
-      calling_tool: ['调API去', '查资料', '调工具', '摸鱼'],
-      error: ['报错了!', 'bug真坑', '谁帮我', '接口500'],
-      success: ['搞定了!', '测试通过', '收工', '上线了'],
-      idle: ['等任务', '摸鱼中', '喝咖啡', '好闲'],
-      dead_loop: ['又转起来了', '死循环', '停不下']
+      writing: ['快好了', '写代码', '调接口', '查文档'],
+      thinking: ['想想', '纠结', '需求变了', '捋思路'],
+      calling_tool: ['调API', '查资料', '调工具', '摸鱼'],
+      error: ['报错!', 'bug!', '谁帮我', '500'],
+      success: ['搞定!', '通过', '收工', '上线'],
+      idle: ['等任务', '无聊', '喝咖啡', '好闲'],
+      dead_loop: ['转圈圈', '死循环', '停不下']
     };
     // Create foot-level chat containers once
     if (!(window as any).__footBubbles) {
@@ -1052,23 +1052,25 @@ async function main() {
           const linesJ = CHAT_BY_STATE[stateJ] || CHAT_BY_STATE.idle;
           const chatI = linesI[Math.floor(Date.now() / 4000) % linesI.length];
           const chatJ = linesJ[Math.floor(Date.now() / 4000 + 2) % linesJ.length];
-          // Foot bubble for i (cyan border)
+          // Foot bubble for i (cyan border) — auto width
           const fi = footBubbles[i];
           fi.position.set(sprites[i].x, sprites[i].y + 16);
-          const bgI = new Graphics();
-          bgI.roundRect(-40, -7, 80, 11, 3).fill({ color: 0x111122, alpha: 0.9 }).stroke({ color: 0x80f0ff, width: 1 });
-          fi.addChild(bgI);
           const txtI = new Text({ text: chatI, style: { fontFamily: 'monospace', fontSize: 6, fill: 0x80f0ff } });
-          txtI.position.set(-36, -5);
+          const bwI = txtI.width + 6;
+          const bgI = new Graphics();
+          bgI.roundRect(-bwI/2, -6, bwI, 10, 2).fill({ color: 0x111122, alpha: 0.9 }).stroke({ color: 0x80f0ff, width: 1 });
+          fi.addChild(bgI);
+          txtI.position.set(-txtI.width/2, -4);
           fi.addChild(txtI);
           // Foot bubble for j (yellow border)
           const fj = footBubbles[j];
           fj.position.set(sprites[j].x, sprites[j].y + 16);
-          const bgJ = new Graphics();
-          bgJ.roundRect(-40, -7, 80, 11, 3).fill({ color: 0x111122, alpha: 0.9 }).stroke({ color: 0xffaa00, width: 1 });
-          fj.addChild(bgJ);
           const txtJ = new Text({ text: chatJ, style: { fontFamily: 'monospace', fontSize: 6, fill: 0xffaa00 } });
-          txtJ.position.set(-36, -5);
+          const bwJ = txtJ.width + 6;
+          const bgJ = new Graphics();
+          bgJ.roundRect(-bwJ/2, -6, bwJ, 10, 2).fill({ color: 0x111122, alpha: 0.9 }).stroke({ color: 0xffaa00, width: 1 });
+          fj.addChild(bgJ);
+          txtJ.position.set(-txtJ.width/2, -4);
           fj.addChild(txtJ);
         }
       }
