@@ -216,6 +216,47 @@ async function main() {
   const availMapW = MID_W - 8, availMapH = MID_H - 100;
   const mapScale = Math.min(availMapW / (mapRenderer.width*ts), availMapH / (mapRenderer.height*ts), 3);
   world.scale.set(mapScale);
+  let currentScale = mapScale;
+  // Mobile touch: pinch zoom + drag
+  const touchState = { dragging: false, moved: false, startX: 0, startY: 0, lastDist: 0, startTime: 0 };
+  app.canvas.addEventListener('touchstart', (e: TouchEvent) => {
+    touchState.dragging = true;
+    touchState.moved = false;
+    touchState.startTime = Date.now();
+    if (e.touches.length === 1) {
+      touchState.startX = e.touches[0].clientX;
+      touchState.startY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      touchState.lastDist = Math.sqrt(dx*dx + dy*dy);
+    }
+  });
+  app.canvas.addEventListener('touchmove', (e: TouchEvent) => {
+    e.preventDefault();
+    if (e.touches.length === 1 && touchState.dragging) {
+      const dx = e.touches[0].clientX - touchState.startX;
+      const dy = e.touches[0].clientY - touchState.startY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) touchState.moved = true;
+      world.x += dx;
+      world.y += dy;
+      touchState.startX = e.touches[0].clientX;
+      touchState.startY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const delta = dist - touchState.lastDist;
+      currentScale = Math.max(mapScale * 0.5, Math.min(mapScale * 2, currentScale + delta * 0.01));
+      world.scale.set(currentScale);
+      touchState.lastDist = dist;
+      touchState.moved = true;
+    }
+  }, { passive: false });
+  app.canvas.addEventListener('touchend', () => {
+    touchState.dragging = false;
+    touchState.moved = false;
+  });
   const spawnPoints = mapRenderer.getAllSpawnPoints();
   const kitchenPos = { x: 27, y: 14 }, meetingPos = { x: 16, y: 5 };
 
@@ -412,10 +453,10 @@ async function main() {
   world.eventMode = 'static';
   world.on('pointerdown', (e) => {
     const pos = e.global;
-    let closest = -1, minDist = 30 / mapScale;
+    let closest = -1, minDist = 30 / currentScale;
     EMPLOYEES.forEach((emp, i) => {
-      const dx = (pos.x-world.x)/mapScale - sprites[i].x;
-      const dy = (pos.y-world.y)/mapScale - sprites[i].y;
+      const dx = (pos.x-world.x)/currentScale - sprites[i].x;
+      const dy = (pos.y-world.y)/currentScale - sprites[i].y;
       const d = Math.sqrt(dx*dx+dy*dy);
       if (d < minDist) { minDist = d; closest = i; }
     });
