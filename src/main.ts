@@ -135,7 +135,7 @@ async function main() {
   document.getElementById('app')!.appendChild(app.canvas);
 
   const W = app.screen.width, H = app.screen.height;
-  const TOP_H = 48, BOT_H = 90, LEFT_W = 200, RIGHT_W = 260;
+  const TOP_H = 48, BOT_H = 100, LEFT_W = 200, RIGHT_W = 260;
   const MID_W = W - LEFT_W - RIGHT_W;
   const MID_H = H - TOP_H - BOT_H;
 
@@ -435,14 +435,14 @@ async function main() {
   const termTitle = new Text({ text: '▌ TERMINAL', style: { fontFamily: 'monospace', fontSize: 9, fill: C.text, fontWeight: 'bold' } });
   termTitle.position.set(6, 3); bottomBar.addChild(termTitle);
   const clearBtn = new Text({ text: '✕ clear', style: { fontFamily: 'monospace', fontSize: 8, fill: 0xff3366 } });
-  clearBtn.position.set(W-60, 3); bottomBar.addChild(clearBtn);
+  clearBtn.position.set(W-70, BOT_H-12); bottomBar.addChild(clearBtn);
   const termText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 9, fill: 0x00ff41, lineHeight: 14, wordWrap: true, wordWrapWidth: W-12 } });
   termText.position.set(6, 42); bottomBar.addChild(termText);
   // Token TOP3 + Adapters (top row of bottom bar)
   const bottomStatsText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00ffff, lineHeight: 12 } });
-  bottomStatsText.position.set(100, 4); bottomBar.addChild(bottomStatsText);
+  bottomStatsText.position.set(10, BOT_H-12); bottomBar.addChild(bottomStatsText);
   const bottomAdapterText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00ff88, lineHeight: 12 } });
-  bottomAdapterText.position.set(W - 350, 4); bottomBar.addChild(bottomAdapterText);
+  bottomAdapterText.position.set(200, BOT_H-12); bottomBar.addChild(bottomAdapterText);
   const termLines: string[] = [];
   clearBtn.eventMode = 'static';
   clearBtn.on('pointerdown', () => { termLines.length = 0; termText.text = ''; });
