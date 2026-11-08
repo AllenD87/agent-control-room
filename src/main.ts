@@ -65,11 +65,12 @@ function makeBubble(text: string, state: string): Container {
   const c = new Container();
   const colors = STATE_BUBBLE[state] || STATE_BUBBLE.idle;
   const icon = STATE_ICON[state] || '';
-  // Auto-width: fit one line of text, no wrap
+  // Auto-width: exact fit, text fully inside
   const iconTxt = new Text({ text: icon, style: { fontSize: 7 } });
   const shortText = text.length > 10 ? text.slice(0, 8) + '…' : text;
   const labelTxt = new Text({ text: shortText, style: { fontFamily: 'sans-serif', fontSize: 7, fill: colors.fg, fontWeight: 'bold' } });
-  const padX = 3, padY = 2, gap = 2;
+  const padX = 4, padY = 3, gap = 3;
+  // Measure text after layout
   const w = iconTxt.width + gap + labelTxt.width + padX*2;
   const h = Math.max(iconTxt.height, labelTxt.height) + padY*2;
   const g = new Graphics();
@@ -1205,9 +1206,9 @@ async function main() {
       // Update bubble/name/status position every frame
       bubbles[i].x = spr.x; bubbles[i].y = spr.y - SCENE_H*spr.scale.y - 5;
       const col = i % 4;
-      if (col === 1) bubbles[i].x -= 12;
-      if (col === 2) bubbles[i].x += 12;
-      if (col === 3) bubbles[i].x += 20;
+      if (col === 1) { bubbles[i].x -= 14; bubbles[i].y -= 8; }
+      if (col === 2) { bubbles[i].x += 14; }
+      if (col === 3) { bubbles[i].x += 22; bubbles[i].y -= 8; }
       names[i].x = spr.x; names[i].y = spr.y + 2;
       statusIcons[i].x = spr.x; statusIcons[i].y = spr.y - SCENE_H*spr.scale.y - 14;
       if (emp.state === 'writing' || emp.state === 'thinking') {
