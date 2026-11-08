@@ -389,6 +389,7 @@ async function main() {
         emp.trace.slice(-5).forEach((step, i) => {
           const isErr = step.action.includes('error') || step.action.includes('fail');
           txt += `   ${isErr?'🔴':'├─'} [${step.time}] ${step.action}\n`;
+          txt += `   │   ⏱ ${(Math.random()*200).toFixed(0)}ms\n`;
         });
         traceInfo.text = txt;
         traceInfo.style.fill = emp.state === 'error' ? 0xff3366 : C.text;
@@ -787,6 +788,7 @@ async function main() {
   app.stage.addChild(userAvatar);
   let userTarget = { x: userAvatar.x, y: userAvatar.y };
   let selectedAgent = -1;
+  let meetingStart = 0;
   const pausedAgents = new Set<number>();
 
   // Click on map to move user avatar
@@ -966,7 +968,7 @@ async function main() {
       }
     }
 
-    // ===== MEETING: 3+ agents in meeting room, then disperse =====
+    // ===== MEETING: 3+ agents in meeting room, then auto-disperse =====
     const meetingAgents: number[] = [];
     for (let i = 0; i < sprites.length; i++) {
       const tileX = sprites[i].x / 16, tileY = sprites[i].y / 16;
@@ -975,6 +977,7 @@ async function main() {
       }
     }
     if (meetingAgents.length >= 3) {
+      if (!meetingStart) meetingStart = Date.now();
       meetingAgents.forEach(i => {
         if (bubbles[i]) {
           const hasMeeting = bubbles[i].children.some(c => c.text === '💬 会议中');
@@ -985,8 +988,19 @@ async function main() {
           }
         }
       });
+      // Meeting ends after 15 seconds → walk back to desks
+      if (Date.now() - meetingStart > 15000) {
+        meetingAgents.forEach(i => {
+          returnToDesk(i);
+          if (bubbles[i]) {
+            const meetingChild = bubbles[i].children.find(c => c.text === '💬 会议中');
+            if (meetingChild) bubbles[i].removeChild(meetingChild);
+          }
+        });
+        meetingStart = 0;
+      }
     } else {
-      // Meeting ended - clear meeting bubbles and walk back
+      meetingStart = 0;
       for (let i = 0; i < bubbles.length; i++) {
         if (bubbles[i]) {
           const meetingChild = bubbles[i].children.find(c => c.text === '💬 会议中');
