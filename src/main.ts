@@ -438,6 +438,9 @@ async function main() {
   const bbBg = new Graphics(); sciPanel(bbBg, 0, 0, W, BOT_H, C.text); bottomBar.addChild(bbBg);
   const termTitle = new Text({ text: '▌ TERMINAL', style: { fontFamily: 'monospace', fontSize: 9, fill: C.text, fontWeight: 'bold' } });
   termTitle.position.set(6, 3); bottomBar.addChild(termTitle);
+  // Adapter status in terminal top-right
+  const termAdapterStatus = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 8, fill: 0x00ff88 } });
+  termAdapterStatus.position.set(W-280, 5); bottomBar.addChild(termAdapterStatus);
   const clearBtn = new Text({ text: '✕ clear', style: { fontFamily: 'monospace', fontSize: 8, fill: 0xff3366 } });
   clearBtn.position.set(W-70, BOT_H-12); bottomBar.addChild(clearBtn);
   const termText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 9, fill: 0x00ff41, lineHeight: 14, wordWrap: true, wordWrapWidth: W-12 } });
@@ -527,58 +530,83 @@ async function main() {
       const count = EMPLOYEES.filter(e => e.state === s).length;
       if (count > 0) {
         const angle = (count / EMPLOYEES.length) * Math.PI * 2;
+        // Neon glow layer (wider, transparent)
+        pieG.moveTo(0, 0).arc(0, 0, 22, startAngle, startAngle + angle).fill({ color: STATE_COLOR[s], alpha: 0.2 });
         pieG.moveTo(0, 0).arc(0, 0, 20, startAngle, startAngle + angle).fill({ color: STATE_COLOR[s] });
         startAngle += angle;
       }
     });
-    pieG.circle(0, 0, 10).fill({ color: C.panelBg });
+    pieG.circle(0, 0, 10).fill({ color: 0x0a0a14 });
+    pieG.circle(0, 0, 10).stroke({ color: 0xff00ff, alpha: 0.5, width: 1 });
 
     // Token rank (top 3) -> bottom bar
     const sortedAgents = EMPLOYEES.slice().sort((a, b) => b.tokens - a.tokens);
     const top3 = sortedAgents.slice(0, 3).map((a, i) => `${i+1}.${a.name} ${a.tokens}`).join('  ');
     bottomStatsText.text = `◆ TOKEN TOP3: ${top3}`;
-    // Update top bar adapter status
-    adapterStatusTexts[0].text = 'ONLINE'; adapterStatusTexts[0].style.fill = 0x00ff88;
-    adapterStatusTexts[1].text = 'ONLINE'; adapterStatusTexts[1].style.fill = 0x00ff88;
-    adapterStatusTexts[2].text = 'SYNC'; adapterStatusTexts[2].style.fill = 0xffcc00;
+    // Update terminal adapter status (top-right of terminal module)
+    termAdapterStatus.text = 'CrewAI: ● ONLINE   OTel: ● ONLINE   Langfuse: ● SYNC';
 
-    // Token trend line chart
+    // Token trend line chart - neon cyan glow
     tokenChartG.clear();
     const chartW = RIGHT_W - 16, chartH = 30;
-    tokenChartG.rect(0, 0, chartW, chartH).fill({ color: 0x0a0a14 });
-    tokenChartG.rect(0, 0, chartW, chartH).stroke({ color: C.border, alpha: 0.3, width: 1 });
+    tokenChartG.rect(0, 0, chartW, chartH).fill({ color: 0x0a0a1e });
+    tokenChartG.rect(0, 0, chartW, chartH).stroke({ color: 0x00ffff, alpha: 0.4, width: 1 });
     const pts: { x: number; y: number }[] = [];
     for (let i = 0; i < 20; i++) {
       pts.push({ x: (chartW / 19) * i, y: chartH - 4 - Math.abs(Math.sin(i * 0.5) * chartH * 0.6 + Math.random() * 4) });
     }
+    // Glow layer
     tokenChartG.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) tokenChartG.lineTo(pts[i].x, pts[i].y);
-    tokenChartG.stroke({ color: 0x00d4ff, width: 1.5 });
+    tokenChartG.stroke({ color: 0x00ffff, alpha: 0.3, width: 4 });
+    // Main line
+    tokenChartG.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) tokenChartG.lineTo(pts[i].x, pts[i].y);
+    tokenChartG.stroke({ color: 0x80f0ff, width: 1.5 });
+    // Gradient fill below line
+    tokenChartG.moveTo(pts[0].x, chartH);
+    for (let i = 0; i < pts.length; i++) tokenChartG.lineTo(pts[i].x, pts[i].y);
+    tokenChartG.lineTo(pts[pts.length-1].x, chartH);
+    tokenChartG.fill({ color: 0x00ffff, alpha: 0.08 });
 
-    // Activity sparkline
+    // Activity sparkline - neon purple glow
     sparkG.clear();
     const sw = RIGHT_W - 16, sh = 30;
-    sparkG.rect(0, 0, sw, sh).fill({ color: 0x0a0a14 });
-    sparkG.rect(0, 0, sw, sh).stroke({ color: C.border, alpha: 0.3, width: 1 });
+    sparkG.rect(0, 0, sw, sh).fill({ color: 0x0a0a1e });
+    sparkG.rect(0, 0, sw, sh).stroke({ color: 0xb44dff, alpha: 0.4, width: 1 });
     const spts: { x: number; y: number }[] = [];
     for (let i = 0; i < 15; i++) {
       spts.push({ x: (sw / 14) * i, y: sh - 4 - Math.abs(Math.sin(i * 0.7) * sh * 0.6 + Math.random() * 4) });
     }
+    // Glow layer
     sparkG.moveTo(spts[0].x, spts[0].y);
     for (let i = 1; i < spts.length; i++) sparkG.lineTo(spts[i].x, spts[i].y);
-    sparkG.stroke({ color: 0xff00ff, width: 1.5 });
+    sparkG.stroke({ color: 0xb44dff, alpha: 0.3, width: 4 });
+    // Main line
+    sparkG.moveTo(spts[0].x, spts[0].y);
+    for (let i = 1; i < spts.length; i++) sparkG.lineTo(spts[i].x, spts[i].y);
+    sparkG.stroke({ color: 0xcc99ff, width: 1.5 });
+    // Fill below
+    sparkG.moveTo(spts[0].x, sh);
+    for (let i = 0; i < spts.length; i++) sparkG.lineTo(spts[i].x, spts[i].y);
+    sparkG.lineTo(spts[spts.length-1].x, sh);
+    sparkG.fill({ color: 0xb44dff, alpha: 0.08 });
 
-    // 7-day bar chart
+    // 7-day bar chart - neon pink/purple gradient
     barG.clear();
     const bw = RIGHT_W - 16, bh = 30;
-    barG.rect(0, 0, bw, bh).fill({ color: 0x0a0a14 });
-    barG.rect(0, 0, bw, bh).stroke({ color: C.border, alpha: 0.3, width: 1 });
+    barG.rect(0, 0, bw, bh).fill({ color: 0x0a0a1e });
+    barG.rect(0, 0, bw, bh).stroke({ color: 0xff00ff, alpha: 0.4, width: 1 });
     const dailyData = [2, 4, 3, 5, 4, 6, 3];
     const barW = (bw - 20) / 7;
     dailyData.forEach((v, i) => {
       const h = v * 4;
-      barG.rect(10 + i * barW + 2, bh - 4 - h, barW - 4, h).fill({ color: 0x00ff66, alpha: 0.7 });
-      barG.rect(10 + i * barW + 2, bh - 4 - h, barW - 4, 2).fill({ color: 0x00ff66 });
+      // Glow behind bar
+      barG.rect(10 + i * barW + 1, bh - 5 - h, barW - 2, h + 2).fill({ color: 0xff00ff, alpha: 0.15 });
+      // Main bar
+      barG.rect(10 + i * barW + 2, bh - 4 - h, barW - 4, h).fill({ color: i % 2 === 0 ? 0xff33aa : 0xb44dff, alpha: 0.8 });
+      // Top edge neon
+      barG.rect(10 + i * barW + 2, bh - 4 - h, barW - 4, 1.5).fill({ color: 0xffffff });
     });
 
     // Token budget bar
