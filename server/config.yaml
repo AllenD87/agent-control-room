@@ -1,17 +1,35 @@
-# Agent Control Room Adapter Configuration
-# Modify this file and changes take effect immediately (no restart needed)
+# ============================================================
+# Agent Control Room - Adapter Configuration
+# ============================================================
+# Edit this file while server is running - changes hot-reload.
+# See docs/ADAPTER_GUIDE.md for full integration examples.
+# ============================================================
 
 adapters:
+  # ---- CrewAI: pull agent states from your CrewAI app ----
   crewai:
-    enabled: true
-    endpoint: "http://localhost:8000"
+    enabled: true                          # Set false to disable
+    endpoint: "http://localhost:8000"     # Your CrewAI API server
+    # api_key: "sk-xxx"                   # Optional auth header
+    poll_interval: 5000                   # Poll every 5s
+    # Expected: GET {endpoint}/agents returns JSON array of agents
+
+  # ---- OpenTelemetry: pull traces from OTel collector ----
   otel:
     enabled: true
-    endpoint: "http://localhost:4318"
+    endpoint: "http://localhost:4318"     # OTel collector HTTP
+    # service_name: "my-agent-service"    # Filter by service
+    poll_interval: 10000
+
+  # ---- Langfuse: pull LLM generations from Langfuse ----
   langfuse:
     enabled: true
-    endpoint: "http://localhost:3000"
+    endpoint: "http://localhost:3000"     # Langfuse server
+    # public_key: "pk-lf-xxx"             # Langfuse API keys
+    # secret_key: "sk-lf-xxx"
+    poll_interval: 5000
 
+# ---- Server settings ----
 server:
   port: 5175
   heartbeat_interval: 5000
