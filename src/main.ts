@@ -65,23 +65,19 @@ function makeBubble(text: string, state: string): Container {
   const c = new Container();
   const colors = STATE_BUBBLE[state] || STATE_BUBBLE.idle;
   const icon = STATE_ICON[state] || '';
-  // Icon text on left
+  // Pokemon-style: compact, rounded, centered
+  const maxW = 80;
   const iconTxt = new Text({ text: icon, style: { fontSize: 8 } });
-  // Label text on right — wrap at max 90px, max 2 lines
-  const maxW = 90;
-  const labelTxt = new Text({ text, style: { fontFamily: 'sans-serif', fontSize: 7, fill: colors.fg, fontWeight: 'bold', wordWrap: true, wordWrapWidth: maxW, lineHeight: 9 } });
-  // Truncate if too long (more than 2 lines ~ 18 chars)
-  if (text.length > 18) labelTxt.text = text.slice(0, 16) + '...';
-  const pad = 3, gap = 3;
-  const w = Math.max(iconTxt.width + gap + labelTxt.width, maxW) + pad*2;
+  const shortText = text.length > 12 ? text.slice(0, 10) + '…' : text;
+  const labelTxt = new Text({ text: shortText, style: { fontFamily: 'sans-serif', fontSize: 7, fill: colors.fg, fontWeight: 'bold', wordWrap: true, wordWrapWidth: maxW, lineHeight: 9 } });
+  const pad = 4;
+  const w = Math.max(iconTxt.width + 3 + labelTxt.width, maxW) + pad*2;
   const h = Math.max(iconTxt.height, labelTxt.height) + pad*2;
   const g = new Graphics();
-  g.roundRect(-w/2, -(h+3), w, h, 3).fill({ color: colors.bg, alpha: 0.9 }).stroke({ color: colors.border, width: 1.5 });
-  g.moveTo(-2, -3).lineTo(2, -3).lineTo(0, 0).closePath().fill({ color: colors.bg, alpha: 0.9 });
-  // Icon left, centered vertically
-  iconTxt.position.set(-w/2+pad, -(h+3)+pad);
-  // Label right of icon, vertically centered
-  labelTxt.position.set(-w/2+pad+iconTxt.width+gap, -(h+3)+pad+(iconTxt.height-labelTxt.height)/2);
+  g.roundRect(-w/2, -(h+3), w, h, 4).fill({ color: colors.bg, alpha: 0.95 }).stroke({ color: colors.border, width: 1.5 });
+  g.moveTo(-2, -3).lineTo(2, -3).lineTo(0, 0).closePath().fill({ color: colors.bg, alpha: 0.95 });
+  iconTxt.position.set(-w/2+pad, -(h+3)+pad + (h-iconTxt.height)/2);
+  labelTxt.position.set(-w/2+pad+iconTxt.width+3, -(h+3)+pad + (h-labelTxt.height)/2);
   c.addChild(g, iconTxt, labelTxt);
   return c;
 }
@@ -1026,13 +1022,13 @@ async function main() {
 
     // ===== GROUP CHAT: state + task-type aware =====
     const CHAT_BY_STATE: Record<string, string[]> = {
-      writing: ['这个函数快写完了', '正在调接口', 'UI组件写好了', '查下文档', '前端样式调完了', '后端接口联调中'],
-      thinking: ['这个逻辑有点绕', '让我想想方案', '需求又变了', '先捋一下思路', '架构图画好了'],
-      calling_tool: ['我去调个API', '等我查个资料', '调个工具试试', '去趟茶水间', '数据库查询一下'],
-      error: ['报错了，帮我看看', '这个bug真坑', '又挂了...', '谁来帮我debug', '接口500了'],
-      success: ['搞定了！', '测试通过了', '提交了PR', '收工！', '上线了'],
-      idle: ['等等任务', '摸鱼中', '喝杯咖啡', '今天好闲'],
-      dead_loop: ['又转起来了...', '死循环了', '停不下来了']
+      writing: ['快写完了', '调接口中', 'UI搞定了', '查文档'],
+      thinking: ['有点绕', '想想方案', '需求变了', '捋思路'],
+      calling_tool: ['调API去', '查个资料', '调工具试试', '去茶水间'],
+      error: ['报错了！', '这bug真坑', '谁来debug', '接口500'],
+      success: ['搞定了！', '测试通过', '提交PR', '收工！'],
+      idle: ['等任务', '摸鱼中', '喝杯咖啡', '好闲'],
+      dead_loop: ['又转起来了', '死循环了', '停不下来']
     };
     function detectTaskType(task: string): string {
       if (/ui|css|组件|样式|页面|前端|login|page/i.test(task)) return 'frontend';
@@ -1098,10 +1094,10 @@ async function main() {
           }
           // Rotating discussion content by task type
           const discussByType: Record<string, string[]> = {
-            frontend: ['UI组件下周联调', '样式要对齐设计稿', '响应式适配做完'],
-            backend: ['API接口文档更新了', '数据库加个索引', '接口性能优化'],
-            test: ['测试用例补全', '覆盖率到80%', 'bug复现了'],
-            general: ['这个需求下周上线', '有问题随时拉群', '排期再确认下']
+            frontend: ['UI下周联调', '样式对齐设计', '响应式做完'],
+            backend: ['API文档更新', '数据库加索引', '接口性能优化'],
+            test: ['用例补全', '覆盖率80%', 'bug复现了'],
+            general: ['下周上线', '有问题拉群', '排期确认']
           };
           const empTask = EMPLOYEES[i].task;
           const ttype = /ui|css|page|组件|样式/i.test(empTask) ? 'frontend' :
