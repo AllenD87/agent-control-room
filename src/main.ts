@@ -143,6 +143,21 @@ async function main() {
   statsText.position.set(630, 18); topBar.addChild(statsText);
   const hintTxt = new Text({ text: 'G=grid  D=detail  F11=big', style: { fontFamily: 'monospace', fontSize: 9, fill: C.textDim, alpha: 0.6 } });
   hintTxt.position.set(W-180, 18); topBar.addChild(hintTxt);
+  // Alert bell
+  const alertBell = new Text({ text: '🔔', style: { fontFamily: 'monospace', fontSize: 14, fill: 0x666666 } });
+  alertBell.position.set(W-220, 14); topBar.addChild(alertBell);
+  const alertCount = new Text({ text: '0', style: { fontFamily: 'monospace', fontSize: 8, fill: 0xffffff, fontWeight: 'bold' } });
+  alertCount.position.set(W-205, 14); topBar.addChild(alertCount);
+  alertBell.eventMode = 'static'; alertBell.cursor = 'pointer';
+  alertBell.on('pointertap', () => {
+    const alerts = EMPLOYEES.map((e, i) => ({ i, name: e.name, state: e.state })).filter(e => e.state === 'error' || e.state === 'dead_loop');
+    if (alerts.length > 0) {
+      const first = alerts[0];
+      sprites[first.i].x = spawnPoints[first.i].x;
+      sprites[first.i].y = spawnPoints[first.i].y;
+      EMPLOYEES[first.i].state = 'idle';
+    }
+  });
 
   // ===== LEFT SIDEBAR =====
   const sidebar = new Container(); sidebar.position.set(0, TOP_H); app.stage.addChild(sidebar);
@@ -385,11 +400,11 @@ async function main() {
         txt += `├─ Progress: ${Math.round(emp.progress)}%\n`;
         txt += `├─ Tokens: ${emp.tokens}\n`;
         txt += `├─ Task: ${emp.task}\n`;
-        txt += `└─ Call stack (last 5):\n`;
-        emp.trace.slice(-5).forEach((step, i) => {
+        txt += `└─ Call stack (click to expand):\n`;
+        emp.trace.slice(-3).forEach((step, i) => {
           const isErr = step.action.includes('error') || step.action.includes('fail');
-          txt += `   ${isErr?'🔴':'├─'} [${step.time}] ${step.action}\n`;
-          txt += `   │   ⏱ ${(Math.random()*200).toFixed(0)}ms\n`;
+          txt += `   ${isErr?'🔴':'▶'} [${step.time}] ${step.action}\n`;
+          txt += `   │   ⏱ ${(Math.random()*200).toFixed(0)}ms  📥 input  📤 output\n`;
         });
         traceInfo.text = txt;
         traceInfo.style.fill = emp.state === 'error' ? 0xff3366 : C.text;
@@ -832,10 +847,21 @@ async function main() {
   const depLayer = new Graphics();
   depLayer.zIndex = 50;
   world.addChild(depLayer);
-  const depChains: number[][] = [
-    [0, 1, 2],
-    [3, 4, 5],
-  ];
+  // Auto-generate dependency chains: group by task type
+  function buildDeps(): number[][] {
+    const frontend: number[] = [], backend: number[] = [], test: number[] = [];
+    EMPLOYEES.forEach((e, i) => {
+      if (/ui|css|page|login|前端|组件/i.test(e.task)) frontend.push(i);
+      else if (/api|db|接口|deploy|后端/i.test(e.task)) backend.push(i);
+      else test.push(i);
+    });
+    const chains: number[][] = [];
+    if (backend.length > 0) chains.push(backend);
+    if (frontend.length > 0) chains.push(frontend);
+    if (test.length > 0) chains.push(test);
+    return chains.length > 0 ? chains : [[0, 1, 2], [3, 4, 5]];
+  }
+  let depChains: number[][] = buildDeps();
 
   // ===== ANIMATION =====
   app.ticker.add((ticker) => {
@@ -1021,6 +1047,10 @@ async function main() {
 
     // Alert: flash dead_loop and error agents, click to clear
     const alertFlash = Math.floor(Date.now() / 500) % 2 === 0;
+    const errCount = EMPLOYEES.filter(e => e.state === 'error' || e.state === 'dead_loop').length;
+    alertCount.text = String(errCount);
+    alertCount.style.fill = errCount > 0 ? 0xff3366 : 0x666666;
+    alertBell.style.fill = errCount > 0 ? (alertFlash ? 0xff3366 : 0xffaa00) : 0x666666;
     for (let i = 0; i < sprites.length; i++) {
       if (EMPLOYEES[i].state === 'dead_loop' || EMPLOYEES[i].state === 'error') {
         sprites[i].alpha = alertFlash ? 1 : 0.5;
