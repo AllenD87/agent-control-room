@@ -1039,8 +1039,11 @@ async function main() {
       }
     }
     const footBubbles = (window as any).__footBubbles as Container[];
-    // Clear all foot bubbles first
-    footBubbles.forEach(fc => fc.removeChildren());
+    // Clear all foot bubbles every frame, update positions
+    footBubbles.forEach((fc, idx) => {
+      fc.removeChildren();
+      fc.position.set(sprites[idx].x, sprites[idx].y + 16);
+    });
     for (let i = 0; i < sprites.length; i++) {
       for (let j = i+1; j < sprites.length; j++) {
         const dx = sprites[i].x - sprites[j].x, dy = sprites[i].y - sprites[j].y;
