@@ -1071,7 +1071,7 @@ async function main() {
       sprites[0].y += (16*6 - sprites[0].y) * 0.01;
       if (bubbles[0] && !bubbles[0].children.some(c => c.text && c.text === '💬 召集会议')) {
         const invite = new Text({ text: '💬 召集会议', style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffaa00 } });
-        invite.position.set(0, -25);
+        invite.position.set(-invite.width/2, -25);
         bubbles[0].addChild(invite);
       }
     }
@@ -1082,7 +1082,7 @@ async function main() {
           const hasMeeting = bubbles[i].children.some(c => c.text && c.text === '💬 会议中');
           if (!hasMeeting) {
             const mt = new Text({ text: '💬 会议中', style: { fontFamily: 'monospace', fontSize: 7, fill: 0xb46bff } });
-            mt.position.set(0, -25);
+            mt.position.set(-mt.width/2, -25);
             bubbles[i].addChild(mt);
           }
           // Rotating discussion content by task type
@@ -1104,7 +1104,7 @@ async function main() {
             if (old) old.text = `💭 ${discuss}`;
           } else {
             const dt = new Text({ text: `💭 ${discuss}`, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffdd00, wordWrap: true, wordWrapWidth: 80, lineHeight: 9 } });
-            dt.position.set(0, -38);
+            dt.position.set(-dt.width/2, -38);
             bubbles[i].addChild(dt);
           }
         }
