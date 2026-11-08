@@ -65,19 +65,18 @@ function makeBubble(text: string, state: string): Container {
   const c = new Container();
   const colors = STATE_BUBBLE[state] || STATE_BUBBLE.idle;
   const icon = STATE_ICON[state] || '';
-  // Auto-width: exact fit, text fully inside
   const iconTxt = new Text({ text: icon, style: { fontSize: 7 } });
   const shortText = text.length > 10 ? text.slice(0, 8) + '…' : text;
   const labelTxt = new Text({ text: shortText, style: { fontFamily: 'sans-serif', fontSize: 7, fill: colors.fg, fontWeight: 'bold' } });
-  const padX = 4, padY = 3, gap = 3;
-  // Measure text after layout
+  const padX = 4, padY = 2, gap = 3;
   const w = iconTxt.width + gap + labelTxt.width + padX*2;
   const h = Math.max(iconTxt.height, labelTxt.height) + padY*2;
   const g = new Graphics();
   g.roundRect(-w/2, -(h+2), w, h, 3).fill({ color: colors.bg, alpha: 0.95 }).stroke({ color: colors.border, width: 1 });
   g.moveTo(-2, -2).lineTo(2, -2).lineTo(0, 0).closePath().fill({ color: colors.bg, alpha: 0.95 });
-  iconTxt.position.set(-w/2+padX, -(h+2)+padY + (h-iconTxt.height)/2);
-  labelTxt.position.set(-w/2+padX+iconTxt.width+gap, -(h+2)+padY + (h-labelTxt.height)/2);
+  // Center vertically: position from top of bubble
+  iconTxt.position.set(-w/2+padX, -(h+2)+(h-iconTxt.height)/2);
+  labelTxt.position.set(-w/2+padX+iconTxt.width+gap, -(h+2)+(h-labelTxt.height)/2);
   c.addChild(g, iconTxt, labelTxt);
   return c;
 }
@@ -1049,13 +1048,18 @@ async function main() {
           const chatI = linesI[Math.floor(Date.now() / 4000) % linesI.length];
           const chatJ = linesJ[Math.floor(Date.now() / 4000 + 2) % linesJ.length];
           if (bubbles[i] && !bubbles[i].children.some(c => c.text === chatI)) {
-            const chatTxt = new Text({ text: chatI.length > 16 ? chatI.slice(0, 14)+'...' : chatI, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffffff, wordWrap: true, wordWrapWidth: 80, lineHeight: 9 } });
-            chatTxt.position.set(0, -15);
+            // Remove old chat text first
+            const oldChat = bubbles[i].children.find(c => c.text && c.text.startsWith('💬'));
+            if (oldChat) bubbles[i].removeChild(oldChat);
+            const chatTxt = new Text({ text: '💬' + chatI, style: { fontFamily: 'monospace', fontSize: 6, fill: 0xffffff } });
+            chatTxt.position.set(0, -14);
             bubbles[i].addChild(chatTxt);
           }
           if (bubbles[j] && !bubbles[j].children.some(c => c.text === chatJ)) {
-            const chatTxt = new Text({ text: chatJ.length > 16 ? chatJ.slice(0, 14)+'...' : chatJ, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffffff, wordWrap: true, wordWrapWidth: 80, lineHeight: 9 } });
-            chatTxt.position.set(0, -15);
+            const oldChat = bubbles[j].children.find(c => c.text && c.text.startsWith('💬'));
+            if (oldChat) bubbles[j].removeChild(oldChat);
+            const chatTxt = new Text({ text: '💬' + chatJ, style: { fontFamily: 'monospace', fontSize: 6, fill: 0xffffff } });
+            chatTxt.position.set(0, -14);
             bubbles[j].addChild(chatTxt);
           }
         }
