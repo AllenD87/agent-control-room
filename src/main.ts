@@ -65,19 +65,18 @@ function makeBubble(text: string, state: string): Container {
   const c = new Container();
   const colors = STATE_BUBBLE[state] || STATE_BUBBLE.idle;
   const icon = STATE_ICON[state] || '';
-  // Pokemon-style: compact, rounded, centered
-  const maxW = 80;
-  const iconTxt = new Text({ text: icon, style: { fontSize: 8 } });
-  const shortText = text.length > 12 ? text.slice(0, 10) + '…' : text;
-  const labelTxt = new Text({ text: shortText, style: { fontFamily: 'sans-serif', fontSize: 7, fill: colors.fg, fontWeight: 'bold', wordWrap: true, wordWrapWidth: maxW, lineHeight: 9 } });
-  const pad = 4;
-  const w = Math.max(iconTxt.width + 3 + labelTxt.width, maxW) + pad*2;
-  const h = Math.max(iconTxt.height, labelTxt.height) + pad*2;
+  // Auto-width: fit one line of text, no wrap
+  const iconTxt = new Text({ text: icon, style: { fontSize: 7 } });
+  const shortText = text.length > 10 ? text.slice(0, 8) + '…' : text;
+  const labelTxt = new Text({ text: shortText, style: { fontFamily: 'sans-serif', fontSize: 7, fill: colors.fg, fontWeight: 'bold' } });
+  const padX = 3, padY = 2, gap = 2;
+  const w = iconTxt.width + gap + labelTxt.width + padX*2;
+  const h = Math.max(iconTxt.height, labelTxt.height) + padY*2;
   const g = new Graphics();
-  g.roundRect(-w/2, -(h+3), w, h, 4).fill({ color: colors.bg, alpha: 0.95 }).stroke({ color: colors.border, width: 1.5 });
-  g.moveTo(-2, -3).lineTo(2, -3).lineTo(0, 0).closePath().fill({ color: colors.bg, alpha: 0.95 });
-  iconTxt.position.set(-w/2+pad, -(h+3)+pad + (h-iconTxt.height)/2);
-  labelTxt.position.set(-w/2+pad+iconTxt.width+3, -(h+3)+pad + (h-labelTxt.height)/2);
+  g.roundRect(-w/2, -(h+2), w, h, 3).fill({ color: colors.bg, alpha: 0.95 }).stroke({ color: colors.border, width: 1 });
+  g.moveTo(-2, -2).lineTo(2, -2).lineTo(0, 0).closePath().fill({ color: colors.bg, alpha: 0.95 });
+  iconTxt.position.set(-w/2+padX, -(h+2)+padY + (h-iconTxt.height)/2);
+  labelTxt.position.set(-w/2+padX+iconTxt.width+gap, -(h+2)+padY + (h-labelTxt.height)/2);
   c.addChild(g, iconTxt, labelTxt);
   return c;
 }
@@ -1022,13 +1021,13 @@ async function main() {
 
     // ===== GROUP CHAT: state + task-type aware =====
     const CHAT_BY_STATE: Record<string, string[]> = {
-      writing: ['快写完了', '调接口中', 'UI搞定了', '查文档'],
+      writing: ['快写完了', '调接口中', 'UI搞定', '查文档'],
       thinking: ['有点绕', '想想方案', '需求变了', '捋思路'],
-      calling_tool: ['调API去', '查个资料', '调工具试试', '去茶水间'],
-      error: ['报错了！', '这bug真坑', '谁来debug', '接口500'],
-      success: ['搞定了！', '测试通过', '提交PR', '收工！'],
-      idle: ['等任务', '摸鱼中', '喝杯咖啡', '好闲'],
-      dead_loop: ['又转起来了', '死循环了', '停不下来']
+      calling_tool: ['调API去', '查资料', '调工具', '摸鱼'],
+      error: ['报错了!', 'bug真坑', '谁帮我', '接口500'],
+      success: ['搞定了!', '测试通过', '收工', '上线了'],
+      idle: ['等任务', '摸鱼中', '喝咖啡', '好闲'],
+      dead_loop: ['又转起来了', '死循环', '停不下']
     };
     function detectTaskType(task: string): string {
       if (/ui|css|组件|样式|页面|前端|login|page/i.test(task)) return 'frontend';
