@@ -46,22 +46,25 @@ const STATE_ICON: Record<string, string> = {
   calling_tool: '🔧', error: '❗', dead_loop: '🔄', success: '✨',
 };
 const STATE_COLOR: Record<string, number> = {
-  idle: 0x555566, writing: 0x00d4ff, thinking: 0xb46bff,
-  calling_tool: 0x00ff88, error: 0xff3366, dead_loop: 0xffcc00, success: 0x00ff66,
+  idle: 0x555566, writing: 0x00d4ff, thinking: 0x4488ff,
+  calling_tool: 0xb46bff, error: 0xff3366, dead_loop: 0xffcc00, success: 0x00ff66,
 };
 const STATE_LABEL: Record<string, string> = {
   idle: 'IDLE', writing: 'WRITING', thinking: 'THINKING',
   calling_tool: 'CALLING', error: 'ERROR', dead_loop: 'DEAD LOOP', success: 'DONE',
 };
 const STATE_BUBBLE: Record<string, { bg: number; fg: number; border: number }> = {
-  idle: { bg: 0x222233, fg: 0xaaaaaa, border: 0x666666 }, writing: { bg: 0x0a0a22, fg: 0x00ffff, border: 0x00ffff },
-  thinking: { bg: 0x0a1a33, fg: 0x66aaff, border: 0x3388ff }, calling_tool: { bg: 0x0a2211, fg: 0x44ff88, border: 0x22cc66 },
-  error: { bg: 0x330a0a, fg: 0xff6666, border: 0xff3333 }, dead_loop: { bg: 0x332a0a, fg: 0xffcc44, border: 0xffaa22 },
-  success: { bg: 0x0a2a1a, fg: 0x66ffaa, border: 0x33dd88 },
+  idle: { bg: 0x222233, fg: 0xaaaaaa, border: 0x666666 },
+  writing: { bg: 0x0a1a22, fg: 0x80f0ff, border: 0x00d4ff },
+  thinking: { bg: 0x0a1428, fg: 0x88bbff, border: 0x4488ff },
+  calling_tool: { bg: 0x140a22, fg: 0xcc99ff, border: 0xb46bff },
+  error: { bg: 0x2a0a12, fg: 0xff8899, border: 0xff3366 },
+  dead_loop: { bg: 0x2a220a, fg: 0xffdd88, border: 0xffcc00 },
+  success: { bg: 0x0a2214, fg: 0x88ffbb, border: 0x00ff66 },
 };
 const C = { bg: 0x0a0a14, panelBg: 0x111122, panelBg2: 0x1a1a33, border: 0xff00ff, text: 0x80f0ff, textDim: 0x9999cc, accent: 0xff00ff };
 
-function makeBubble(text: string, state: string): Container {
+function makeBubble(text: string, state: string, empName?: string): Container {
   const c = new Container();
   const colors = STATE_BUBBLE[state] || STATE_BUBBLE.idle;
   const icon = STATE_ICON[state] || '';
@@ -80,6 +83,21 @@ function makeBubble(text: string, state: string): Container {
   iconTxt.position.set(-contentW/2, -(h+2) + padY + (contentH - iconTxt.height)/2);
   labelTxt.position.set(-contentW/2 + iconTxt.width + gap, -(h+2) + padY + (contentH - labelTxt.height)/2);
   c.addChild(g, iconTxt, labelTxt);
+  // Employee name above bubble
+  if (empName) {
+    const nameTxt = new Text({ text: empName, style: { fontFamily: 'monospace', fontSize: 6, fill: 0x9999cc } });
+    nameTxt.position.set(-nameTxt.width/2, -(h+2) - nameTxt.height - 2);
+    c.addChild(nameTxt);
+  }
+  // Fade in
+  c.alpha = 0;
+  const startT = performance.now();
+  const fadeIn = () => {
+    const t = (performance.now() - startT) / 200;
+    if (t < 1) { c.alpha = t; requestAnimationFrame(fadeIn); }
+    else c.alpha = 1;
+  };
+  fadeIn();
   return c;
 }
 
@@ -276,7 +294,7 @@ async function main() {
     world.addChild(spr); sprites.push(spr);
     emp.targetX = seat.x*ts+ts/2; emp.targetY = seat.y*ts+ts;
     const px = seat.x*ts+ts/2, py = seat.y*ts+ts;
-    const bubble = makeBubble(STATE_THOUGHT[emp.state], emp.state);
+    const bubble = makeBubble(STATE_THOUGHT[emp.state], emp.state, emp.name);
     bubble.position.set(px, py - SCENE_H*s - 3); bubble.zIndex = 10000;
     world.addChild(bubble); bubbles.push(bubble);
     const icon = new Text({ text: '', style: { fontSize: 1 } });
@@ -595,7 +613,7 @@ async function main() {
     const seat = spawnPoints.get(emp.spawn)!;
     const px = seat.x*ts+ts/2, py = seat.y*ts+ts;
     world.removeChild(bubbles[idx]);
-    const nb = makeBubble(STATE_THOUGHT[s], s);
+    const nb = makeBubble(STATE_THOUGHT[s], s, EMPLOYEES[idx].name);
     nb.position.set(px, py - SCENE_H*sprites[idx].scale.y - 3); nb.zIndex = 10000;
     world.addChild(nb); bubbles[idx] = nb;
     statusIcons[idx].text = STATE_ICON[s];
@@ -768,7 +786,7 @@ async function main() {
                 // Update bubble
                 if (bubbles[i]) {
                   world.removeChild(bubbles[i]);
-                  const nb = makeBubble(STATE_THOUGHT[a.state as AgentState] || '...', a.state);
+                  const nb = makeBubble(STATE_THOUGHT[a.state as AgentState] || '...', a.state, EMPLOYEES[i].name);
                   nb.position.set(sprites[i].x, sprites[i].y - SCENE_H*sprites[i].scale.y - 5);
                   world.addChild(nb); bubbles[i] = nb;
                 }
