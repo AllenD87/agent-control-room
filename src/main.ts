@@ -1047,19 +1047,19 @@ async function main() {
           const linesJ = CHAT_BY_STATE[stateJ] || CHAT_BY_STATE.idle;
           const chatI = linesI[Math.floor(Date.now() / 4000) % linesI.length];
           const chatJ = linesJ[Math.floor(Date.now() / 4000 + 2) % linesJ.length];
-          if (bubbles[i] && !bubbles[i].children.some(c => c.text === chatI)) {
-            // Remove old chat text first
+          if (bubbles[i]) {
+            // Remove old chat bubble child, add new
             const oldChat = bubbles[i].children.find(c => c.text && c.text.startsWith('💬'));
             if (oldChat) bubbles[i].removeChild(oldChat);
-            const chatTxt = new Text({ text: '💬' + chatI, style: { fontFamily: 'monospace', fontSize: 6, fill: 0xffffff } });
-            chatTxt.position.set(0, -14);
+            const chatTxt = new Text({ text: '💬' + chatI, style: { fontFamily: 'monospace', fontSize: 6, fill: 0x80f0ff } });
+            chatTxt.position.set(0, -12);
             bubbles[i].addChild(chatTxt);
           }
-          if (bubbles[j] && !bubbles[j].children.some(c => c.text === chatJ)) {
+          if (bubbles[j]) {
             const oldChat = bubbles[j].children.find(c => c.text && c.text.startsWith('💬'));
             if (oldChat) bubbles[j].removeChild(oldChat);
-            const chatTxt = new Text({ text: '💬' + chatJ, style: { fontFamily: 'monospace', fontSize: 6, fill: 0xffffff } });
-            chatTxt.position.set(0, -14);
+            const chatTxt = new Text({ text: '💬' + chatJ, style: { fontFamily: 'monospace', fontSize: 6, fill: 0x80f0ff } });
+            chatTxt.position.set(0, -12);
             bubbles[j].addChild(chatTxt);
           }
         }
