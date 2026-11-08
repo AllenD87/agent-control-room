@@ -162,15 +162,26 @@ async function main() {
     alertPanel.visible = panelOpen;
     if (panelOpen) {
       const alerts = EMPLOYEES.map((e, i) => ({ i, name: e.name, state: e.state })).filter(e => e.state === 'error' || e.state === 'dead_loop');
-      let txt = '⚠️ ALERTS (' + alerts.length + ')\n';
-      alerts.forEach(a => {
+      let txt = '⚠️ ALERTS (' + alerts.length + ')  [×=clear]\n';
+      alerts.forEach((a, idx) => {
         const color = a.state === 'error' ? '🔴' : '🟡';
-        txt += `${color} ${a.name} - ${a.state}\n`;
+        txt += `${color} ${a.name} - ${a.state}   [×]\n`;
       });
       txt += '\n[click bell to close]';
       alertListText.text = txt;
-      alertPanel.rect(0, 0, 260, 20 + alerts.length * 14).fill({ color: 0x111122 });
-      alertPanel.rect(0, 0, 260, 20 + alerts.length * 14).stroke({ color: C.border, alpha: 0.7, width: 1.5 });
+      alertPanel.rect(0, 0, 260, 20 + alerts.length * 14 + 20).fill({ color: 0x111122 });
+      alertPanel.rect(0, 0, 260, 20 + alerts.length * 14 + 20).stroke({ color: C.border, alpha: 0.7, width: 1.5 });
+    }
+  });
+  // Click on alert panel to clear first alert
+  alertPanel.eventMode = 'static';
+  alertPanel.on('pointertap', () => {
+    const firstErr = EMPLOYEES.findIndex(e => e.state === 'error' || e.state === 'dead_loop');
+    if (firstErr >= 0) {
+      EMPLOYEES[firstErr].state = 'idle';
+      EMPLOYEES[firstErr].progress = 0;
+      panelOpen = false;
+      alertPanel.visible = false;
     }
   });
 
@@ -1023,7 +1034,7 @@ async function main() {
       // Alice heads to meeting room
       sprites[0].x += (16*18 - sprites[0].x) * 0.01;
       sprites[0].y += (16*6 - sprites[0].y) * 0.01;
-      if (bubbles[0] && !bubbles[0].children.some(c => c.text === '💬 召集会议')) {
+      if (bubbles[0] && !bubbles[0].children.some(c => c.text && c.text === '💬 召集会议')) {
         const invite = new Text({ text: '💬 召集会议', style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffaa00 } });
         invite.position.set(0, -25);
         bubbles[0].addChild(invite);
@@ -1033,11 +1044,23 @@ async function main() {
       if (!meetingStart) meetingStart = Date.now();
       meetingAgents.forEach(i => {
         if (bubbles[i]) {
-          const hasMeeting = bubbles[i].children.some(c => c.text === '💬 会议中');
+          const hasMeeting = bubbles[i].children.some(c => c.text && c.text === '💬 会议中');
           if (!hasMeeting) {
             const mt = new Text({ text: '💬 会议中', style: { fontFamily: 'monospace', fontSize: 7, fill: 0xb46bff } });
             mt.position.set(0, -25);
             bubbles[i].addChild(mt);
+          }
+          // Rotating discussion content
+          const discussLines = ['这个需求下周上线', '前端先做，后端并行', '测试覆盖核心流程就行', '有问题随时拉群'];
+          const discuss = discussLines[Math.floor(Date.now() / 4000) % discussLines.length];
+          const hasDiscuss = bubbles[i].children.some(c => c.text && c.text.startsWith('💭'));
+          if (hasDiscuss) {
+            const old = bubbles[i].children.find(c => c.text && c.text.startsWith('💭'));
+            if (old) old.text = `💭 ${discuss}`;
+          } else {
+            const dt = new Text({ text: `💭 ${discuss}`, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffdd00 } });
+            dt.position.set(0, -38);
+            bubbles[i].addChild(dt);
           }
         }
       });
@@ -1058,8 +1081,10 @@ async function main() {
       meetingStart = 0;
       for (let i = 0; i < bubbles.length; i++) {
         if (bubbles[i]) {
-          const meetingChild = bubbles[i].children.find(c => c.text === '💬 会议中');
+          const meetingChild = bubbles[i].children.find(c => c.text && c.text === '💬 会议中');
           if (meetingChild) bubbles[i].removeChild(meetingChild);
+          const discussChild = bubbles[i].children.find(c => c.text && c.text.startsWith('💭'));
+          if (discussChild) bubbles[i].removeChild(discussChild);
         }
       }
     }
