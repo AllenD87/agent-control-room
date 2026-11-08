@@ -67,11 +67,11 @@ function makeBubble(text: string, state: string): Container {
   const icon = STATE_ICON[state] || '';
   // Icon text on left
   const iconTxt = new Text({ text: icon, style: { fontSize: 8 } });
-  // Label text on right — wrap at max 120px, max 2 lines
-  const maxW = 120;
+  // Label text on right — wrap at max 90px, max 2 lines
+  const maxW = 90;
   const labelTxt = new Text({ text, style: { fontFamily: 'sans-serif', fontSize: 7, fill: colors.fg, fontWeight: 'bold', wordWrap: true, wordWrapWidth: maxW, lineHeight: 9 } });
-  // Truncate if too long (more than 2 lines ~ 24 chars)
-  if (text.length > 24) labelTxt.text = text.slice(0, 22) + '...';
+  // Truncate if too long (more than 2 lines ~ 18 chars)
+  if (text.length > 18) labelTxt.text = text.slice(0, 16) + '...';
   const pad = 3, gap = 3;
   const w = Math.max(iconTxt.width + gap + labelTxt.width, maxW) + pad*2;
   const h = Math.max(iconTxt.height, labelTxt.height) + pad*2;
@@ -1053,12 +1053,12 @@ async function main() {
           const chatI = linesI[Math.floor(Date.now() / 4000) % linesI.length];
           const chatJ = linesJ[Math.floor(Date.now() / 4000 + 2) % linesJ.length];
           if (bubbles[i] && !bubbles[i].children.some(c => c.text === chatI)) {
-            const chatTxt = new Text({ text: chatI.length > 20 ? chatI.slice(0, 18)+'...' : chatI, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffffff, wordWrap: true, wordWrapWidth: 100, lineHeight: 9 } });
+            const chatTxt = new Text({ text: chatI.length > 16 ? chatI.slice(0, 14)+'...' : chatI, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffffff, wordWrap: true, wordWrapWidth: 80, lineHeight: 9 } });
             chatTxt.position.set(0, -15);
             bubbles[i].addChild(chatTxt);
           }
           if (bubbles[j] && !bubbles[j].children.some(c => c.text === chatJ)) {
-            const chatTxt = new Text({ text: chatJ.length > 20 ? chatJ.slice(0, 18)+'...' : chatJ, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffffff, wordWrap: true, wordWrapWidth: 100, lineHeight: 9 } });
+            const chatTxt = new Text({ text: chatJ.length > 16 ? chatJ.slice(0, 14)+'...' : chatJ, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffffff, wordWrap: true, wordWrapWidth: 80, lineHeight: 9 } });
             chatTxt.position.set(0, -15);
             bubbles[j].addChild(chatTxt);
           }
@@ -1114,7 +1114,7 @@ async function main() {
             const old = bubbles[i].children.find(c => c.text && c.text.startsWith('💭'));
             if (old) old.text = `💭 ${discuss}`;
           } else {
-            const dt = new Text({ text: `💭 ${discuss}`, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffdd00, wordWrap: true, wordWrapWidth: 100, lineHeight: 9 } });
+            const dt = new Text({ text: `💭 ${discuss}`, style: { fontFamily: 'monospace', fontSize: 7, fill: 0xffdd00, wordWrap: true, wordWrapWidth: 80, lineHeight: 9 } });
             dt.position.set(0, -38);
             bubbles[i].addChild(dt);
           }
