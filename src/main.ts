@@ -152,17 +152,17 @@ async function main() {
   const adapterColors = [0x00ffff, 0xff00ff, 0x9d00ff];
   const adapterStatusTexts: Text[] = [];
   ['CrewAI','OTel','Langfuse'].forEach((label, i) => {
-    const ax = 380 + i * 100;
+    const ax = 400 + i * 110;
     const dg = new Graphics(); dg.circle(ax, 23, 3.5).fill({ color: adapterColors[i] }); dg.circle(ax, 23, 6).fill({ color: adapterColors[i], alpha: 0.3 });
     topBar.addChild(dg);
     const txt = new Text({ text: label, style: { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff, alpha: 0.7 } });
-    txt.position.set(ax+8, 18); topBar.addChild(txt);
+    txt.position.set(ax+9, 18); topBar.addChild(txt);
     const st = new Text({ text: '···', style: { fontFamily: 'monospace', fontSize: 7, fill: 0x888888 } });
-    st.position.set(ax+8, 28); topBar.addChild(st);
+    st.position.set(ax+9, 29); topBar.addChild(st);
     adapterStatusTexts.push(st);
   });
   const statsText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 11, fill: C.text, fontWeight: 'bold' } });
-  statsText.position.set(630, 18); topBar.addChild(statsText);
+  statsText.position.set(720, 18); topBar.addChild(statsText);
   const hintTxt = new Text({ text: 'G=grid  D=detail  F11=big', style: { fontFamily: 'monospace', fontSize: 9, fill: C.textDim, alpha: 0.6 } });
   hintTxt.position.set(W-180, 18); topBar.addChild(hintTxt);
   // Alert bell
