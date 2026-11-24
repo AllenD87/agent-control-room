@@ -1,1 +1,18 @@
+# Dependencies — regenerable via `npm ci` from package-lock.json
+node_modules/
+
+# Captured recordings and demo artifacts — regenerable via record/*.cjs
 recordings/
+
+# Runtime logs
+*.log
+deploy/otel.log
+deploy/langfuse.log
+
+# External downloaded binary (not built from this repo; fetch separately)
+deploy/otelcol
+
+# Local environment files
+.env
+.env.*
+!.env.example
